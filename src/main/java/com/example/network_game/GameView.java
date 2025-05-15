@@ -30,24 +30,35 @@ public class GameView extends JPanel {
         int barY = 10;
         int barWidth = 780;
         int barHeight = 20;
-        
         double totalEffectiveLength = model.getTotalWireLength();
         if (model.getSelectedPort() != null) {
             double tempLength = calculateWireLength(model.getSelectedPort().getPosition(), mousePos);
             totalEffectiveLength += tempLength;
         }
-        
         g2d.setColor(Color.BLACK);
         g2d.drawRect(barX, barY, barWidth, barHeight);
-        
         double remainingWire = Math.max(0, model.getMaxWireLength() - totalEffectiveLength);
         int filledWidth = (int) (remainingWire / model.getMaxWireLength() * barWidth);
         g2d.setColor(model.getSelectedPort() != null && !model.isTemporaryWireValid(mousePos) ? Color.YELLOW : Color.GREEN);
         g2d.fillRect(barX + 1, barY + 1, Math.max(0, filledWidth - 1), barHeight - 1);
-        
         g2d.setColor(Color.BLACK);
         g2d.setFont(new Font("Arial", Font.PLAIN, 12));
         g2d.drawString(String.format("Wire: %.0f/%.0f", remainingWire, model.getMaxWireLength()), barX + 5, barY - 5);
+
+        
+        int hudX = 10;
+        int hudY = 550;
+        int hudWidth = 200;
+        int hudHeight = 40;
+        g2d.setColor(new Color(0, 0, 0, 100)); 
+        g2d.fillRect(hudX, hudY, hudWidth, hudHeight);
+        g2d.setColor(Color.WHITE);
+        g2d.setFont(new Font("Arial", Font.PLAIN, 12));
+        g2d.drawString(String.format("Wire: %.0f/%.0f", remainingWire, model.getMaxWireLength()), hudX + 5, hudY + 12);
+        g2d.drawString(String.format("Time: %.0f%%", model.getTemporalProgress()), hudX + 5, hudY + 24);
+        double packetLoss = model.getTotalPackets() > 0 ? (model.getLostPackets() / (double) model.getTotalPackets()) * 100.0 : 0.0;
+        g2d.drawString(String.format("Loss: %.0f%%", packetLoss), hudX + 100, hudY + 12);
+        g2d.drawString(String.format("Coins: %d", model.getCoins()), hudX + 100, hudY + 24);
 
         for (int i = 0; i < model.getSystems().size(); i++) {
             Hop system = model.getSystems().get(i);
@@ -96,12 +107,10 @@ public class GameView extends JPanel {
             Point center = pocket.getCenterOfMass(src, dest);
             if (center == null) continue;
 
-            
             Shape shape = pocket.getShape(center);
             g2d.setColor(pocket.getShapeType() == ShapeType.Square ? Color.GREEN : Color.YELLOW);
             g2d.fill(shape);
 
-            
             g2d.setColor(Color.BLACK);
             g2d.fillOval(center.x - 1, center.y - 1, 2, 2);
         }

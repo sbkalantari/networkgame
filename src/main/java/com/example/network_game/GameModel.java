@@ -14,6 +14,11 @@ public class GameModel {
     private Random random;
     private double maxWireLength;
     private double totalWireLength;
+    private int totalPackets;
+    private int lostPackets;
+    private int coins;
+    private double stageDuration;
+    private double currentTime;
 
     public GameModel() {
         systems = new ArrayList<>();
@@ -24,6 +29,11 @@ public class GameModel {
         random = new Random();
         maxWireLength = 3000.0;
         totalWireLength = 0.0;
+        totalPackets = 0;
+        lostPackets = 0;
+        coins = 0;
+        stageDuration = 60.0; 
+        currentTime = 0.0;
         initializeSystems();
     }
 
@@ -78,11 +88,18 @@ public class GameModel {
                 pocket.setCurrentHop(referenceSystem);
                 pockets.add(pocket);
             }
+            totalPackets = pockets.size(); 
+            lostPackets = 0;
+            coins = 0;
+            currentTime = 0.0;
         }
     }
 
     public void updatePockets(double deltaTime) {
         if (!isPlaying) return;
+
+        currentTime += deltaTime; 
+        if (currentTime > stageDuration) currentTime = stageDuration;
 
         List<Pocket> pocketsToRemove = new ArrayList<>();
 
@@ -129,6 +146,12 @@ public class GameModel {
             }
         }
 
+        
+        for (Pocket pocket : pocketsToRemove) {
+            if (!pocket.isLost()) continue;
+            lostPackets++;
+        }
+
         pockets.removeAll(pocketsToRemove);
         pocketsToRemove.clear();
 
@@ -140,6 +163,7 @@ public class GameModel {
                     pocket.setCurrentWire(outputPort.getWire());
                     pocket.setProgress(0);
                     pocket.setCurrentHop(null);
+                    coins += pocket.getCoinReward(); 
                 }
             } else if (pocket.getCurrentWire() != null) {
                 pocket.updateProgress(deltaTime);
@@ -149,6 +173,7 @@ public class GameModel {
                     if (destHop.ports.size() <= 5) {
                         pocket.setCurrentHop(destHop);
                         pocket.setCurrentWire(null);
+                        coins += pocket.getCoinReward(); 
                     } else {
                         pocketsToRemove.add(pocket);
                     }
@@ -286,5 +311,21 @@ public class GameModel {
 
     public double getTotalWireLength() {
         return totalWireLength;
+    }
+
+    public int getTotalPackets() {
+        return totalPackets;
+    }
+
+    public int getLostPackets() {
+        return lostPackets;
+    }
+
+    public int getCoins() {
+        return coins;
+    }
+
+    public double getTemporalProgress() {
+        return (currentTime / stageDuration) * 100.0; 
     }
 }
