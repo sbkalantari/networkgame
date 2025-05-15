@@ -11,6 +11,7 @@ public class GameView extends JPanel {
         this.model = model;
         this.mousePos = new Point();
         setPreferredSize(new Dimension(800, 600));
+        setLayout(null);
     }
 
     public void setMousePos(Point mousePos) {
@@ -54,6 +55,26 @@ public class GameView extends JPanel {
             else
                 g2d.setColor(Color.RED);
             g2d.drawLine(src.x, src.y, dest.x, dest.y);
+        }
+        for (Pocket pocket : model.getPockets()) {
+            if (pocket.getCurrentWire() != null) {
+                Point src = pocket.getCurrentWire().getSource().getPosition();
+                Point dest = pocket.getCurrentWire().getDestination().getPosition();
+                double t = pocket.getProgress();
+                int x = (int)(src.x * (1 - t) + dest.x * t);
+                int y = (int)(src.y * (1 - t) + dest.y * t);
+                g2d.setColor(pocket.getShape() == ShapeType.Square ? Color.GREEN : Color.YELLOW);
+                if (pocket.getShape() == ShapeType.Square) {
+                    g2d.fillRect(x - 5, y - 5, 10, 10);
+                } else {
+                    Polygon triangle = new Polygon(
+                            new int[]{x, x - 7, x + 7},
+                            new int[]{y - 7, y + 7, y + 7},
+                            3
+                    );
+                    g2d.fillPolygon(triangle);
+                }
+            }
         }
         if (model.getSelectedPort() != null) {
             g2d.setColor(Color.GREEN);
