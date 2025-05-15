@@ -30,12 +30,22 @@ public class GameView extends JPanel {
             g2d.setColor(Color.BLACK);
             g2d.drawRect(system.getX(), system.getY(), system.getWidth(), system.getHeight());
 
+            int ledX = system.getX() + system.getWidth() / 2 - 5;
+            int ledY = system.getY() + 5;
+            if (system.IsValid()) {
+                g2d.setColor(Color.BLUE);
+            } else {
+                g2d.setColor(new Color(128, 128, 128, 100));
+            }
+            g2d.fillOval(ledX, ledY, 10, 10);
+            g2d.setColor(Color.DARK_GRAY);
+            g2d.drawOval(ledX, ledY, 10, 10);
+
             for (Port port : system.ports) {
                 g2d.setColor(port == model.getSelectedPort() ? Color.RED : Color.BLUE);
                 g2d.fillRect(port.getX() - 5, port.getY() - 5, 10, 10);
             }
         }
-
         for (Wire wire : model.getWires()) {
             Point src = wire.getSource().getPosition();
             Point dest = wire.getDestination().getPosition();
@@ -45,7 +55,6 @@ public class GameView extends JPanel {
                 g2d.setColor(Color.RED);
             g2d.drawLine(src.x, src.y, dest.x, dest.y);
         }
-
         if (model.getSelectedPort() != null) {
             g2d.setColor(Color.GREEN);
             g2d.drawLine(model.getSelectedPort().getX(), model.getSelectedPort().getY(), mousePos.x, mousePos.y);
