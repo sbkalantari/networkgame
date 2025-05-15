@@ -5,8 +5,9 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 public class Hop implements ValidDevice {
-    ArrayList<Port> ports = new ArrayList<Port>();
-    Queue<Pocket> pockets = new LinkedList<Pocket>();
+    ArrayList<Port> ports = new ArrayList<>();
+    Queue<Pocket> pockets = new LinkedList<>();
+    private int x, y, width, height;
 
     @Override
     public boolean IsValid() {
@@ -14,4 +15,19 @@ public class Hop implements ValidDevice {
             if (!p.IsValid()) return false;
         return true;
     }
+
+    public void setPosition(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    public void setSize(int width, int height) {
+        this.width = width;
+        this.height = height;
+    }
+
+    public int getX() { return x; }
+    public int getY() { return y; }
+    public int getWidth() { return width; }
+    public int getHeight() { return height; }
 }
