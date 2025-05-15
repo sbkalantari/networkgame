@@ -35,6 +35,18 @@ public class GameController {
                 view.setMousePos(e.getPoint());
             }
         });
+
+        view.getReturnToMenuButton().addActionListener(e -> {
+            model.resetStage();
+            view.repaint();
+        });
+
+        view.getNextStageButton().addActionListener(e -> {
+            model.resetStage();
+            model.startPlaying();
+            animationTimer.start();
+            view.repaint();
+        });
     }
 
     private void setupPlayButton() {
@@ -43,6 +55,7 @@ public class GameController {
         playButton.addActionListener(e -> {
             model.startPlaying();
             animationTimer.start();
+            view.repaint();
         });
         view.add(playButton);
     }
@@ -58,6 +71,7 @@ public class GameController {
     }
 
     private void handleLeftClick(Point clickPoint) {
+        if (model.isGameOver() || model.isLevelPassed()) return;
         Port clickedPort = model.findPortAt(clickPoint);
         if (clickedPort != null) {
             if (model.getSelectedPort() == null) {
@@ -71,6 +85,7 @@ public class GameController {
     }
 
     private void handleRightClick(Point clickPoint) {
+        if (model.isGameOver() || model.isLevelPassed()) return;
         Wire wireToRemove = model.findWireAt(clickPoint);
         model.removeWire(wireToRemove);
         view.repaint();

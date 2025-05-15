@@ -6,17 +6,38 @@ import java.awt.*;
 public class GameView extends JPanel {
     private GameModel model;
     private Point mousePos;
+    private JButton returnToMenuButton;
+    private JButton nextStageButton;
 
     public GameView(GameModel model) {
         this.model = model;
         this.mousePos = new Point();
         setPreferredSize(new Dimension(800, 600));
         setLayout(null);
+
+        
+        returnToMenuButton = new JButton("Return to Menu");
+        returnToMenuButton.setBounds(350, 400, 150, 30);
+        returnToMenuButton.setVisible(false);
+        add(returnToMenuButton);
+
+        nextStageButton = new JButton("Next Stage");
+        nextStageButton.setBounds(350, 400, 150, 30);
+        nextStageButton.setVisible(false);
+        add(nextStageButton);
     }
 
     public void setMousePos(Point mousePos) {
         this.mousePos = mousePos;
         repaint();
+    }
+
+    public JButton getReturnToMenuButton() {
+        return returnToMenuButton;
+    }
+
+    public JButton getNextStageButton() {
+        return nextStageButton;
     }
 
     @Override
@@ -50,7 +71,7 @@ public class GameView extends JPanel {
         int hudY = 550;
         int hudWidth = 200;
         int hudHeight = 40;
-        g2d.setColor(new Color(0, 0, 0, 100)); 
+        g2d.setColor(new Color(0, 0, 0, 100));
         g2d.fillRect(hudX, hudY, hudWidth, hudHeight);
         g2d.setColor(Color.WHITE);
         g2d.setFont(new Font("Arial", Font.PLAIN, 12));
@@ -118,6 +139,32 @@ public class GameView extends JPanel {
         if (model.getSelectedPort() != null) {
             g2d.setColor(model.isTemporaryWireValid(mousePos) ? Color.BLUE : Color.RED);
             g2d.drawLine(model.getSelectedPort().getX(), model.getSelectedPort().getY(), mousePos.x, mousePos.y);
+        }
+
+        
+        if (model.isGameOver()) {
+            g2d.setColor(new Color(0, 0, 0, 150));
+            g2d.fillRect(250, 200, 300, 200);
+            g2d.setColor(Color.WHITE);
+            g2d.setFont(new Font("Arial", Font.BOLD, 24));
+            g2d.drawString("Game Over", 350, 250);
+            g2d.setFont(new Font("Arial", Font.PLAIN, 16));
+            g2d.drawString("Healthy Packets: " + (model.getTotalPackets() - model.getLostPackets()), 300, 300);
+            g2d.drawString("Packet Loss: " + String.format("%.0f%%", packetLoss), 300, 320);
+            returnToMenuButton.setVisible(true);
+        } else if (model.isLevelPassed()) {
+            g2d.setColor(new Color(0, 0, 0, 150));
+            g2d.fillRect(250, 200, 300, 200);
+            g2d.setColor(Color.WHITE);
+            g2d.setFont(new Font("Arial", Font.BOLD, 24));
+            g2d.drawString("Level Passed!", 350, 250);
+            g2d.setFont(new Font("Arial", Font.PLAIN, 16));
+            g2d.drawString("All Packets Returned", 300, 300);
+            nextStageButton.setVisible(true);
+            returnToMenuButton.setVisible(true);
+        } else {
+            returnToMenuButton.setVisible(false);
+            nextStageButton.setVisible(false);
         }
     }
 

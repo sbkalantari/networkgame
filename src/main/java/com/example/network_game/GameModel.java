@@ -19,6 +19,9 @@ public class GameModel {
     private int coins;
     private double stageDuration;
     private double currentTime;
+    private int sourceHubPackets;
+    private boolean isGameOver;
+    private boolean isLevelPassed;
 
     public GameModel() {
         systems = new ArrayList<>();
@@ -32,8 +35,11 @@ public class GameModel {
         totalPackets = 0;
         lostPackets = 0;
         coins = 0;
-        stageDuration = 60.0; 
+        stageDuration = 60.0;
         currentTime = 0.0;
+        sourceHubPackets = 0;
+        isGameOver = false;
+        isLevelPassed = false;
         initializeSystems();
     }
 
@@ -81,24 +87,29 @@ public class GameModel {
     public void startPlaying() {
         if (!isPlaying) {
             isPlaying = true;
+            pockets.clear(); 
             Hop referenceSystem = systems.get(0);
-            for (int i = 0; i < 30; i++) {
+            for (int i = 0; i < 10; i++) {
                 Pocket pocket = new Pocket();
                 pocket.setShape(random.nextBoolean() ? ShapeType.Square : ShapeType.Triangle);
                 pocket.setCurrentHop(referenceSystem);
                 pockets.add(pocket);
             }
-            totalPackets = pockets.size(); 
+            totalPackets = pockets.size();
             lostPackets = 0;
             coins = 0;
             currentTime = 0.0;
+            sourceHubPackets = 0; 
+            isGameOver = false;
+            isLevelPassed = false;
+            
         }
     }
 
     public void updatePockets(double deltaTime) {
-        if (!isPlaying) return;
+        if (!isPlaying || isGameOver || isLevelPassed) return;
 
-        currentTime += deltaTime; 
+        currentTime += deltaTime;
         if (currentTime > stageDuration) currentTime = stageDuration;
 
         List<Pocket> pocketsToRemove = new ArrayList<>();
@@ -146,10 +157,12 @@ public class GameModel {
             }
         }
 
-        
         for (Pocket pocket : pocketsToRemove) {
             if (!pocket.isLost()) continue;
             lostPackets++;
+            if (pocket.getCurrentHop() == systems.get(0)) {
+                sourceHubPackets--;
+            }
         }
 
         pockets.removeAll(pocketsToRemove);
@@ -158,12 +171,14 @@ public class GameModel {
         for (Pocket pocket : pockets) {
             if (pocket.isLost()) continue;
             if (pocket.getCurrentHop() != null) {
+                
+                if (pocket.getCurrentHop() == systems.get(0) && sourceHubPackets > 0) continue;
                 Port outputPort = chooseOutputPort(pocket);
                 if (outputPort != null && outputPort.getWire() != null && outputPort.getWire().IsValid()) {
                     pocket.setCurrentWire(outputPort.getWire());
                     pocket.setProgress(0);
                     pocket.setCurrentHop(null);
-                    coins += pocket.getCoinReward(); 
+                    coins += pocket.getCoinReward();
                 }
             } else if (pocket.getCurrentWire() != null) {
                 pocket.updateProgress(deltaTime);
@@ -173,7 +188,10 @@ public class GameModel {
                     if (destHop.ports.size() <= 5) {
                         pocket.setCurrentHop(destHop);
                         pocket.setCurrentWire(null);
-                        coins += pocket.getCoinReward(); 
+                        coins += pocket.getCoinReward();
+                        if (destHop == systems.get(0)) {
+                            sourceHubPackets++;
+                        }
                     } else {
                         pocketsToRemove.add(pocket);
                     }
@@ -181,6 +199,42 @@ public class GameModel {
             }
         }
         pockets.removeAll(pocketsToRemove);
+
+        if (totalPackets > 0 && (lostPackets / (double) totalPackets) > 0.5) {
+            isGameOver = true;
+            isPlaying = false;
+        }
+
+        
+        System.out.println(sourceHubPackets);
+        if (sourceHubPackets != 0 && (totalPackets == 0 || (lostPackets / (double) totalPackets) <= 0.5)) {
+            boolean found = false;
+            for (Pocket pocket : pockets) {
+                if (!pocket.isLost() && pocket.getCurrentHop() != systems.get(0)){
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                isLevelPassed = true;
+                isPlaying = false;
+            }
+        }
+    }
+
+    public void resetStage() {
+        pockets.clear();
+        wires.clear();
+        totalWireLength = 0.0;
+        totalPackets = 0;
+        lostPackets = 0;
+        coins = 0;
+        currentTime = 0.0;
+        sourceHubPackets = 0;
+        isGameOver = false;
+        isLevelPassed = false;
+        isPlaying = false;
+        selectedPort = null;
     }
 
     private Port chooseOutputPort(Pocket pocket) {
@@ -326,6 +380,18 @@ public class GameModel {
     }
 
     public double getTemporalProgress() {
-        return (currentTime / stageDuration) * 100.0; 
+        return (currentTime / stageDuration) * 100.0;
+    }
+
+    public int getSourceHubPackets() {
+        return sourceHubPackets;
+    }
+
+    public boolean isGameOver() {
+        return isGameOver;
+    }
+
+    public boolean isLevelPassed() {
+        return isLevelPassed;
     }
 }
