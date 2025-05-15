@@ -13,6 +13,9 @@ public class Pocket {
     private double progress;
     private boolean lost;
     private Point shapeOffset;
+    //TODO fix dynamic health
+    private int health;
+    private Pocket lastHit;
 
     public Pocket() {
         this.progress = 0;
@@ -21,6 +24,7 @@ public class Pocket {
         this.speed = 100;
         this.coinReward = 1;
         this.shapeOffset = new Point(0, 0);
+        this.health = 2;
     }
 
     public void setShape(ShapeType shape) {
@@ -34,6 +38,16 @@ public class Pocket {
             this.coinReward = 2;
             this.speed = 120;
         }
+    }
+
+    public boolean gotHit(Pocket pocket){
+        this.health--;
+        this.lastHit = pocket;
+        if (health == 0) {
+            this.lost = true;
+            return true;
+        }
+        return false;
     }
 
     public void updateProgress(double deltaTime) {
@@ -59,11 +73,11 @@ public class Pocket {
         int x = center.x + shapeOffset.x;
         int y = center.y + shapeOffset.y;
         if (shape == ShapeType.Square) {
-            return new Rectangle2D.Double(x - 5, y - 5, 10, 10);
+            return new Rectangle2D.Double(x - 8, y - 8, 16, 16); 
         } else {
             return new Polygon(
-                    new int[]{x, x - 7, x + 7},
-                    new int[]{y - 7, y + 7, y + 7},
+                    new int[]{x, x - 10, x + 10}, 
+                    new int[]{y - 10, y + 10, y + 10}, 
                     3
             );
         }
@@ -98,11 +112,13 @@ public class Pocket {
             double wireDy = dest.y - src.y;
             double wireLength = Math.sqrt(wireDx * wireDx + wireDy * wireDy);
             if (wireLength == 0) return;
-
+            
             double perpDx = -wireDy / wireLength;
             double perpDy = wireDx / wireLength;
+            
             double dx = center.x - collisionPoint.x;
             double dy = center.y - collisionPoint.y;
+            
             double dot = dx * perpDx + dy * perpDy;
             double displacement = strength * maxDisplacement * Math.signum(dot);
             shapeOffset.x += (int)(perpDx * displacement);
@@ -151,5 +167,13 @@ public class Pocket {
 
     public void setProgress(double progress) {
         this.progress = progress;
+    }
+
+    public Pocket getLastHit() {
+        return lastHit;
+    }
+
+    public void setLastHit(Pocket lastHit) {
+        this.lastHit = lastHit;
     }
 }

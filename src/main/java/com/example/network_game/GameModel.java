@@ -90,13 +90,22 @@ public class GameModel {
         for (int i = 0; i < pockets.size(); i++) {
             Pocket p1 = pockets.get(i);
             if (p1.isLost() || p1.getCurrentWire() == null) continue;
+            //TODO fix it
+            boolean safe = true;
             for (int j = i + 1; j < pockets.size(); j++) {
                 Pocket p2 = pockets.get(j);
                 if (p2.isLost() || p2.getCurrentWire() == null) continue;
                 Point c1 = p1.getCenterOfMass(p1.getCurrentWire().getSource().getPosition(), p1.getCurrentWire().getDestination().getPosition());
                 Point c2 = p2.getCenterOfMass(p2.getCurrentWire().getSource().getPosition(), p2.getCurrentWire().getDestination().getPosition());
                 if (c1 != null && c2 != null && p1.getShape(c1).intersects(p2.getShape(c2).getBounds2D())) {
-                    
+                    safe = false;
+                    if (p1.getLastHit() == p2){
+                        continue;
+                    }
+                    if (p1.gotHit(p1))
+                        pocketsToRemove.add(p1);
+                    if (p2.gotHit(p2))
+                        pocketsToRemove.add(p2);
                     Point collisionPoint = new Point((c1.x + c2.x) / 2, (c1.y + c2.y) / 2);
                     for (Pocket nearby : pockets) {
                         if (!nearby.isLost() && nearby.getCurrentWire() != null) {
@@ -109,6 +118,9 @@ public class GameModel {
                     }
                     break;
                 }
+            }
+            if (safe) {
+                p1.setLastHit(null);
             }
         }
 
