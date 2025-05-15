@@ -25,6 +25,30 @@ public class GameView extends JPanel {
         Graphics2D g2d = (Graphics2D) g;
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
+        
+        int barX = 10;
+        int barY = 10;
+        int barWidth = 780;
+        int barHeight = 20;
+        
+        double totalEffectiveLength = model.getTotalWireLength();
+        if (model.getSelectedPort() != null) {
+            double tempLength = calculateWireLength(model.getSelectedPort().getPosition(), mousePos);
+            totalEffectiveLength += tempLength;
+        }
+        
+        g2d.setColor(Color.BLACK);
+        g2d.drawRect(barX, barY, barWidth, barHeight);
+        
+        double remainingWire = Math.max(0, model.getMaxWireLength() - totalEffectiveLength);
+        int filledWidth = (int) (remainingWire / model.getMaxWireLength() * barWidth);
+        g2d.setColor(model.getSelectedPort() != null && !model.isTemporaryWireValid(mousePos) ? Color.YELLOW : Color.GREEN);
+        g2d.fillRect(barX + 1, barY + 1, Math.max(0, filledWidth - 1), barHeight - 1);
+        
+        g2d.setColor(Color.BLACK);
+        g2d.setFont(new Font("Arial", Font.PLAIN, 12));
+        g2d.drawString(String.format("Wire: %.0f/%.0f", remainingWire, model.getMaxWireLength()), barX + 5, barY - 5);
+
         for (int i = 0; i < model.getSystems().size(); i++) {
             Hop system = model.getSystems().get(i);
             g2d.setColor(Color.LIGHT_GRAY);
@@ -86,5 +110,9 @@ public class GameView extends JPanel {
             g2d.setColor(model.isTemporaryWireValid(mousePos) ? Color.BLUE : Color.RED);
             g2d.drawLine(model.getSelectedPort().getX(), model.getSelectedPort().getY(), mousePos.x, mousePos.y);
         }
+    }
+
+    private double calculateWireLength(Point p1, Point p2) {
+        return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
     }
 }

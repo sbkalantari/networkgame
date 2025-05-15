@@ -72,7 +72,7 @@ public class GameModel {
         if (!isPlaying) {
             isPlaying = true;
             Hop referenceSystem = systems.get(0);
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 30; i++) {
                 Pocket pocket = new Pocket();
                 pocket.setShape(random.nextBoolean() ? ShapeType.Square : ShapeType.Triangle);
                 pocket.setCurrentHop(referenceSystem);
@@ -86,11 +86,9 @@ public class GameModel {
 
         List<Pocket> pocketsToRemove = new ArrayList<>();
 
-        
         for (int i = 0; i < pockets.size(); i++) {
             Pocket p1 = pockets.get(i);
             if (p1.isLost() || p1.getCurrentWire() == null) continue;
-            //TODO fix it
             boolean safe = true;
             for (int j = i + 1; j < pockets.size(); j++) {
                 Pocket p2 = pockets.get(j);
@@ -99,12 +97,12 @@ public class GameModel {
                 Point c2 = p2.getCenterOfMass(p2.getCurrentWire().getSource().getPosition(), p2.getCurrentWire().getDestination().getPosition());
                 if (c1 != null && c2 != null && p1.getShape(c1).intersects(p2.getShape(c2).getBounds2D())) {
                     safe = false;
-                    if (p1.getLastHit() == p2){
+                    if (p1.getLastHit() == p2) {
                         continue;
                     }
-                    if (p1.gotHit(p1))
+                    if (p1.gotHit(p2))
                         pocketsToRemove.add(p1);
-                    if (p2.gotHit(p2))
+                    if (p2.gotHit(p1))
                         pocketsToRemove.add(p2);
                     Point collisionPoint = new Point((c1.x + c2.x) / 2, (c1.y + c2.y) / 2);
                     for (Pocket nearby : pockets) {
@@ -124,7 +122,6 @@ public class GameModel {
             }
         }
 
-        
         for (Pocket pocket : pockets) {
             if (!pocket.isLost() && pocket.getCurrentWire() != null && pocket.isCenterOfMassOutsideShape()) {
                 pocket.setLost(true);
@@ -132,11 +129,9 @@ public class GameModel {
             }
         }
 
-        
         pockets.removeAll(pocketsToRemove);
         pocketsToRemove.clear();
 
-        
         for (Pocket pocket : pockets) {
             if (pocket.isLost()) continue;
             if (pocket.getCurrentHop() != null) {
@@ -283,5 +278,13 @@ public class GameModel {
 
     public boolean isPlaying() {
         return isPlaying;
+    }
+
+    public double getMaxWireLength() {
+        return maxWireLength;
+    }
+
+    public double getTotalWireLength() {
+        return totalWireLength;
     }
 }
