@@ -85,7 +85,48 @@ public class GameModel {
         if (!isPlaying) return;
 
         List<Pocket> pocketsToRemove = new ArrayList<>();
+
+        
+        for (int i = 0; i < pockets.size(); i++) {
+            Pocket p1 = pockets.get(i);
+            if (p1.isLost() || p1.getCurrentWire() == null) continue;
+            for (int j = i + 1; j < pockets.size(); j++) {
+                Pocket p2 = pockets.get(j);
+                if (p2.isLost() || p2.getCurrentWire() == null) continue;
+                Point c1 = p1.getCenterOfMass(p1.getCurrentWire().getSource().getPosition(), p1.getCurrentWire().getDestination().getPosition());
+                Point c2 = p2.getCenterOfMass(p2.getCurrentWire().getSource().getPosition(), p2.getCurrentWire().getDestination().getPosition());
+                if (c1 != null && c2 != null && p1.getShape(c1).intersects(p2.getShape(c2).getBounds2D())) {
+                    
+                    Point collisionPoint = new Point((c1.x + c2.x) / 2, (c1.y + c2.y) / 2);
+                    for (Pocket nearby : pockets) {
+                        if (!nearby.isLost() && nearby.getCurrentWire() != null) {
+                            nearby.applyImpactDisplacement(
+                                    collisionPoint,
+                                    nearby.getCurrentWire().getSource().getPosition(),
+                                    nearby.getCurrentWire().getDestination().getPosition()
+                            );
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+        
         for (Pocket pocket : pockets) {
+            if (!pocket.isLost() && pocket.getCurrentWire() != null && pocket.isCenterOfMassOutsideShape()) {
+                pocket.setLost(true);
+                pocketsToRemove.add(pocket);
+            }
+        }
+
+        
+        pockets.removeAll(pocketsToRemove);
+        pocketsToRemove.clear();
+
+        
+        for (Pocket pocket : pockets) {
+            if (pocket.isLost()) continue;
             if (pocket.getCurrentHop() != null) {
                 Port outputPort = chooseOutputPort(pocket);
                 if (outputPort != null && outputPort.getWire() != null && outputPort.getWire().IsValid()) {
@@ -116,7 +157,7 @@ public class GameModel {
         List<Port> emptyPorts = new ArrayList<>();
         for (Port port : hop.ports) {
             if (port.getType() == PortType.Output && port.getWire() != null && port.getWire().IsValid()) {
-                if (port.getShape() == pocket.getShape()) {
+                if (port.getShape() == pocket.getShapeType()) {
                     compatiblePorts.add(port);
                 }
                 emptyPorts.add(port);
@@ -134,7 +175,7 @@ public class GameModel {
 
     private boolean isPortEmpty(Port port) {
         for (Pocket pocket : pockets) {
-            if (pocket.getCurrentWire() == port.getWire()) return false;
+            if (pocket.getCurrentWire() == port.getWire() && !pocket.isLost()) return false;
         }
         return true;
     }

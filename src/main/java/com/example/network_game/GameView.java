@@ -32,12 +32,12 @@ public class GameView extends JPanel {
             g2d.setColor(Color.BLACK);
             g2d.drawRect(system.getX(), system.getY(), system.getWidth(), system.getHeight());
 
-
             if (i == 0) {
                 g2d.setColor(Color.BLACK);
                 g2d.setFont(new Font("Arial", Font.BOLD, 12));
                 g2d.drawString("S", system.getX() + 5, system.getY() + 15);
             }
+
             int ledX = system.getX() + system.getWidth() / 2 - 5;
             int ledY = system.getY() + 5;
             if (system.IsValid()) {
@@ -54,6 +54,7 @@ public class GameView extends JPanel {
                 g2d.fillRect(port.getX() - 5, port.getY() - 5, 10, 10);
             }
         }
+
         for (Wire wire : model.getWires()) {
             Point src = wire.getSource().getPosition();
             Point dest = wire.getDestination().getPosition();
@@ -63,26 +64,24 @@ public class GameView extends JPanel {
                 g2d.setColor(Color.RED);
             g2d.drawLine(src.x, src.y, dest.x, dest.y);
         }
+
         for (Pocket pocket : model.getPockets()) {
-            if (pocket.getCurrentWire() != null) {
-                Point src = pocket.getCurrentWire().getSource().getPosition();
-                Point dest = pocket.getCurrentWire().getDestination().getPosition();
-                double t = pocket.getProgress();
-                int x = (int)(src.x * (1 - t) + dest.x * t);
-                int y = (int)(src.y * (1 - t) + dest.y * t);
-                g2d.setColor(pocket.getShape() == ShapeType.Square ? Color.GREEN : Color.YELLOW);
-                if (pocket.getShape() == ShapeType.Square) {
-                    g2d.fillRect(x - 5, y - 5, 10, 10);
-                } else {
-                    Polygon triangle = new Polygon(
-                            new int[]{x, x - 7, x + 7},
-                            new int[]{y - 7, y + 7, y + 7},
-                            3
-                    );
-                    g2d.fillPolygon(triangle);
-                }
-            }
+            if (pocket.isLost() || pocket.getCurrentWire() == null) continue;
+            Point src = pocket.getCurrentWire().getSource().getPosition();
+            Point dest = pocket.getCurrentWire().getDestination().getPosition();
+            Point center = pocket.getCenterOfMass(src, dest);
+            if (center == null) continue;
+
+            
+            Shape shape = pocket.getShape(center);
+            g2d.setColor(pocket.getShapeType() == ShapeType.Square ? Color.GREEN : Color.YELLOW);
+            g2d.fill(shape);
+
+            
+            g2d.setColor(Color.BLACK);
+            g2d.fillOval(center.x - 1, center.y - 1, 2, 2);
         }
+
         if (model.getSelectedPort() != null) {
             g2d.setColor(model.isTemporaryWireValid(mousePos) ? Color.BLUE : Color.RED);
             g2d.drawLine(model.getSelectedPort().getX(), model.getSelectedPort().getY(), mousePos.x, mousePos.y);

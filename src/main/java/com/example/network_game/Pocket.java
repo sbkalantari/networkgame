@@ -1,5 +1,8 @@
 package com.example.network_game;
 
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
+
 public class Pocket {
     private ShapeType shape;
     private double size;
@@ -8,12 +11,16 @@ public class Pocket {
     private Hop currentHop;
     private Wire currentWire;
     private double progress;
+    private boolean lost;
+    private Point shapeOffset;
 
     public Pocket() {
         this.progress = 0;
+        this.lost = false;
         this.size = 2;
         this.speed = 100;
         this.coinReward = 1;
+        this.shapeOffset = new Point(0, 0);
     }
 
     public void setShape(ShapeType shape) {
@@ -30,7 +37,7 @@ public class Pocket {
     }
 
     public void updateProgress(double deltaTime) {
-        if (currentWire == null) return;
+        if (currentWire == null || lost) return;
         Port destPort = currentWire.getDestination();
         double effectiveSpeed = speed;
         if (destPort.getShape() != shape) {
@@ -48,7 +55,69 @@ public class Pocket {
         if (progress > 1) progress = 1;
     }
 
-    public ShapeType getShape() {
+    public Shape getShape(Point center) {
+        int x = center.x + shapeOffset.x;
+        int y = center.y + shapeOffset.y;
+        if (shape == ShapeType.Square) {
+            return new Rectangle2D.Double(x - 5, y - 5, 10, 10);
+        } else {
+            return new Polygon(
+                    new int[]{x, x - 7, x + 7},
+                    new int[]{y - 7, y + 7, y + 7},
+                    3
+            );
+        }
+    }
+
+    public void setLost(boolean lost) {
+        this.lost = lost;
+    }
+
+    public boolean isLost() {
+        return lost;
+    }
+
+    public Point getCenterOfMass(Point src, Point dest) {
+        if (currentWire == null) return null;
+        double t = progress;
+        int x = (int)(src.x * (1 - t) + dest.x * t);
+        int y = (int)(src.y * (1 - t) + dest.y * t);
+        return new Point(x, y);
+    }
+
+    public void applyImpactDisplacement(Point collisionPoint, Point src, Point dest) {
+        if (currentWire == null || lost) return;
+        Point center = getCenterOfMass(src, dest);
+        double distance = Math.sqrt(Math.pow(center.x - collisionPoint.x, 2) + Math.pow(center.y - collisionPoint.y, 2));
+        double radius = 100.0;
+        if (distance < radius && distance > 0) {
+            double strength = (radius - distance) / radius;
+            double maxDisplacement = 5.0;
+            
+            double wireDx = dest.x - src.x;
+            double wireDy = dest.y - src.y;
+            double wireLength = Math.sqrt(wireDx * wireDx + wireDy * wireDy);
+            if (wireLength == 0) return;
+
+            double perpDx = -wireDy / wireLength;
+            double perpDy = wireDx / wireLength;
+            double dx = center.x - collisionPoint.x;
+            double dy = center.y - collisionPoint.y;
+            double dot = dx * perpDx + dy * perpDy;
+            double displacement = strength * maxDisplacement * Math.signum(dot);
+            shapeOffset.x += (int)(perpDx * displacement);
+            shapeOffset.y += (int)(perpDy * displacement);
+        }
+    }
+
+    public boolean isCenterOfMassOutsideShape() {
+        if (currentWire == null) return false;
+        Point center = getCenterOfMass(currentWire.getSource().getPosition(), currentWire.getDestination().getPosition());
+        Shape shape = getShape(center);
+        return !shape.contains(center.x, center.y);
+    }
+
+    public ShapeType getShapeType() {
         return shape;
     }
 
