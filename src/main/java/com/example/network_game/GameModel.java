@@ -12,6 +12,8 @@ public class GameModel {
     private Port selectedPort;
     private boolean isPlaying;
     private Random random;
+    private double maxWireLength;
+    private double totalWireLength;
 
     public GameModel() {
         systems = new ArrayList<>();
@@ -20,13 +22,15 @@ public class GameModel {
         selectedPort = null;
         isPlaying = false;
         random = new Random();
+        maxWireLength = 3000.0;
+        totalWireLength = 0.0;
         initializeSystems();
     }
 
     private void initializeSystems() {
         systems.add(createSystem(100, 100, 2, 2));
-        systems.add(createSystem(500, 100, 2, 3));
-        systems.add(createSystem(100, 400, 3, 2));
+        systems.add(createSystem(500, 100, 2, 2));
+        systems.add(createSystem(100, 400, 2, 2));
         systems.add(createSystem(500, 400, 2, 2));
     }
 
@@ -165,6 +169,10 @@ public class GameModel {
         if (p1.getWire() != null || p2.getWire() != null) {
             return null;
         }
+        double wireLength = calculateWireLength(p1.getPosition(), p2.getPosition());
+        if (totalWireLength + wireLength > maxWireLength) {
+            return null;
+        }
         Wire wire = new Wire();
         if (p1.getType() == PortType.Input) {
             Port temp = p1;
@@ -173,18 +181,31 @@ public class GameModel {
         }
         wire.setSource(p1);
         wire.setDestination(p2);
+        wire.setLength(wireLength);
         p1.setWire(wire);
         p2.setWire(wire);
         wires.add(wire);
+        totalWireLength += wireLength;
         return wire;
     }
 
     public void removeWire(Wire wire) {
         if (wire != null) {
+            totalWireLength -= wire.getLength();
             wire.getSource().setWire(null);
             wire.getDestination().setWire(null);
             wires.remove(wire);
         }
+    }
+
+    private double calculateWireLength(Point p1, Point p2) {
+        return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+    }
+
+    public boolean isTemporaryWireValid(Point mousePos) {
+        if (selectedPort == null) return true;
+        double tempLength = calculateWireLength(selectedPort.getPosition(), mousePos);
+        return totalWireLength + tempLength <= maxWireLength;
     }
 
     public List<Hop> getSystems() {
