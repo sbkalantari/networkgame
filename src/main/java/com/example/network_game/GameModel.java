@@ -3,7 +3,6 @@ package com.example.network_game;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 public class GameModel {
     private List<Hop> systems;
@@ -11,7 +10,6 @@ public class GameModel {
     private List<Pocket> pockets;
     private Port selectedPort;
     private boolean isPlaying;
-    private Random random;
     private double maxWireLength;
     private double totalWireLength;
     private int totalPackets;
@@ -29,7 +27,6 @@ public class GameModel {
         pockets = new ArrayList<>();
         selectedPort = null;
         isPlaying = false;
-        random = new Random();
         maxWireLength = 3000.0;
         totalWireLength = 0.0;
         totalPackets = 0;
@@ -87,11 +84,12 @@ public class GameModel {
     public void startPlaying() {
         if (!isPlaying) {
             isPlaying = true;
-            pockets.clear(); 
+            pockets.clear();
             Hop referenceSystem = systems.get(0);
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < 100; i++) {
                 Pocket pocket = new Pocket();
-                pocket.setShape(random.nextBoolean() ? ShapeType.Square : ShapeType.Triangle);
+                
+                pocket.setShape(i % 2 == 0 ? ShapeType.Square : ShapeType.Triangle);
                 pocket.setCurrentHop(referenceSystem);
                 pockets.add(pocket);
             }
@@ -99,10 +97,9 @@ public class GameModel {
             lostPackets = 0;
             coins = 0;
             currentTime = 0.0;
-            sourceHubPackets = 0; 
+            sourceHubPackets = 0;
             isGameOver = false;
             isLevelPassed = false;
-            
         }
     }
 
@@ -110,7 +107,13 @@ public class GameModel {
         if (!isPlaying || isGameOver || isLevelPassed) return;
 
         currentTime += deltaTime;
-        if (currentTime > stageDuration) currentTime = stageDuration;
+        if (currentTime >= stageDuration) {
+            currentTime = stageDuration;
+            isPlaying = false;
+            isGameOver = totalPackets > 0 && (lostPackets / (double) totalPackets) > 0.5;
+            isLevelPassed = !isGameOver;
+            return;
+        }
 
         List<Pocket> pocketsToRemove = new ArrayList<>();
 
@@ -171,7 +174,6 @@ public class GameModel {
         for (Pocket pocket : pockets) {
             if (pocket.isLost()) continue;
             if (pocket.getCurrentHop() != null) {
-                
                 if (pocket.getCurrentHop() == systems.get(0) && sourceHubPackets > 0) continue;
                 Port outputPort = chooseOutputPort(pocket);
                 if (outputPort != null && outputPort.getWire() != null && outputPort.getWire().IsValid()) {
@@ -205,12 +207,10 @@ public class GameModel {
             isPlaying = false;
         }
 
-        
-        System.out.println(sourceHubPackets);
         if (sourceHubPackets != 0 && (totalPackets == 0 || (lostPackets / (double) totalPackets) <= 0.5)) {
             boolean found = false;
             for (Pocket pocket : pockets) {
-                if (!pocket.isLost() && pocket.getCurrentHop() != systems.get(0)){
+                if (!pocket.isLost() && pocket.getCurrentHop() != systems.get(0)) {
                     found = true;
                     break;
                 }
@@ -219,6 +219,49 @@ public class GameModel {
                 isLevelPassed = true;
                 isPlaying = false;
             }
+        }
+    }
+
+    public void jumpToTime(double targetTime) {
+        if (!isPlaying || isGameOver || isLevelPassed) return;
+
+        
+        targetTime = Math.min(targetTime, stageDuration);
+        targetTime = Math.max(targetTime, 0.0);
+
+        
+        List<Wire> savedWires = new ArrayList<>(wires);
+        double savedWireLength = totalWireLength;
+
+        
+        pockets.clear();
+        totalPackets = 0;
+        lostPackets = 0;
+        coins = 0;
+        currentTime = 0.0;
+        sourceHubPackets = 0;
+        isGameOver = false;
+        isLevelPassed = false;
+        isPlaying = false;
+        startPlaying();
+
+        
+        wires.clear();
+        wires.addAll(savedWires);
+        totalWireLength = savedWireLength;
+        for (Wire wire : wires) {
+            wire.getSource().setWire(wire);
+            wire.getDestination().setWire(wire);
+        }
+
+        
+        if (targetTime > 0) {
+            int steps = (int) (targetTime / 0.016); 
+            double stepDeltaTime = targetTime / steps;
+            for (int i = 0; i < steps && isPlaying && !isGameOver && !isLevelPassed; i++) {
+                updatePockets(stepDeltaTime);
+            }
+            currentTime = targetTime;
         }
     }
 
@@ -249,14 +292,14 @@ public class GameModel {
                 emptyPorts.add(port);
             }
         }
+        
         for (Port port : compatiblePorts) {
             if (isPortEmpty(port)) return port;
         }
-        List<Port> availablePorts = new ArrayList<>();
         for (Port port : emptyPorts) {
-            if (isPortEmpty(port)) availablePorts.add(port);
+            if (isPortEmpty(port)) return port;
         }
-        return availablePorts.isEmpty() ? null : availablePorts.get(random.nextInt(availablePorts.size()));
+        return null;
     }
 
     private boolean isPortEmpty(Port port) {
@@ -335,6 +378,19 @@ public class GameModel {
         return totalWireLength + tempLength <= maxWireLength;
     }
 
+    public boolean isTimeBarClicked(Point point, double[] targetTime) {
+        int barX = 10;
+        int barY = 40;
+        int barWidth = 780;
+        int barHeight = 20;
+        if (point.x >= barX && point.x <= barX + barWidth && point.y >= barY && point.y <= barY + barHeight) {
+            double clickRatio = (point.x - barX) / (double) barWidth;
+            targetTime[0] = clickRatio * stageDuration;
+            return true;
+        }
+        return false;
+    }
+
     public List<Hop> getSystems() {
         return systems;
     }
@@ -393,5 +449,9 @@ public class GameModel {
 
     public boolean isLevelPassed() {
         return isLevelPassed;
+    }
+
+    public double getStageDuration() {
+        return stageDuration;
     }
 }

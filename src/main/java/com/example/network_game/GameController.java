@@ -22,7 +22,14 @@ public class GameController {
             @Override
             public void mousePressed(MouseEvent e) {
                 if (SwingUtilities.isLeftMouseButton(e)) {
-                    handleLeftClick(e.getPoint());
+                    double[] targetTime = new double[1];
+                    if (model.isTimeBarClicked(e.getPoint(), targetTime)) {
+                        boolean isBackward = targetTime[0] < model.getTemporalProgress() / 100.0 * model.getStageDuration();
+                        model.jumpToTime(targetTime[0]);
+                        view.notifyTimeJump(isBackward);
+                    } else {
+                        handleLeftClick(e.getPoint());
+                    }
                 } else if (SwingUtilities.isRightMouseButton(e)) {
                     handleRightClick(e.getPoint());
                 }

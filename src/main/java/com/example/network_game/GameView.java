@@ -8,6 +8,8 @@ public class GameView extends JPanel {
     private Point mousePos;
     private JButton returnToMenuButton;
     private JButton nextStageButton;
+    private long lastJumpTime;
+    private boolean isBackwardJump;
 
     public GameView(GameModel model) {
         this.model = model;
@@ -15,7 +17,6 @@ public class GameView extends JPanel {
         setPreferredSize(new Dimension(800, 600));
         setLayout(null);
 
-        
         returnToMenuButton = new JButton("Return to Menu");
         returnToMenuButton.setBounds(350, 400, 150, 30);
         returnToMenuButton.setVisible(false);
@@ -25,6 +26,9 @@ public class GameView extends JPanel {
         nextStageButton.setBounds(350, 400, 150, 30);
         nextStageButton.setVisible(false);
         add(nextStageButton);
+
+        lastJumpTime = 0;
+        isBackwardJump = false;
     }
 
     public void setMousePos(Point mousePos) {
@@ -47,24 +51,45 @@ public class GameView extends JPanel {
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         
-        int barX = 10;
-        int barY = 10;
-        int barWidth = 780;
-        int barHeight = 20;
+        int wireBarX = 10;
+        int wireBarY = 10;
+        int wireBarWidth = 780;
+        int wireBarHeight = 20;
         double totalEffectiveLength = model.getTotalWireLength();
         if (model.getSelectedPort() != null) {
             double tempLength = calculateWireLength(model.getSelectedPort().getPosition(), mousePos);
             totalEffectiveLength += tempLength;
         }
         g2d.setColor(Color.BLACK);
-        g2d.drawRect(barX, barY, barWidth, barHeight);
+        g2d.drawRect(wireBarX, wireBarY, wireBarWidth, wireBarHeight);
         double remainingWire = Math.max(0, model.getMaxWireLength() - totalEffectiveLength);
-        int filledWidth = (int) (remainingWire / model.getMaxWireLength() * barWidth);
+        int wireFilledWidth = (int) (remainingWire / model.getMaxWireLength() * wireBarWidth);
         g2d.setColor(model.getSelectedPort() != null && !model.isTemporaryWireValid(mousePos) ? Color.YELLOW : Color.GREEN);
-        g2d.fillRect(barX + 1, barY + 1, Math.max(0, filledWidth - 1), barHeight - 1);
+        g2d.fillRect(wireBarX + 1, wireBarY + 1, Math.max(0, wireFilledWidth - 1), wireBarHeight - 1);
         g2d.setColor(Color.BLACK);
         g2d.setFont(new Font("Arial", Font.PLAIN, 12));
-        g2d.drawString(String.format("Wire: %.0f/%.0f", remainingWire, model.getMaxWireLength()), barX + 5, barY - 5);
+        g2d.drawString(String.format("Wire: %.0f/%.0f", remainingWire, model.getMaxWireLength()), wireBarX + 5, wireBarY - 5);
+
+        
+        int timeBarX = 10;
+        int timeBarY = 40;
+        int timeBarWidth = 780;
+        int timeBarHeight = 20;
+        g2d.setColor(Color.BLACK);
+        g2d.drawRect(timeBarX, timeBarY, timeBarWidth, timeBarHeight);
+        double timeProgress = model.getTemporalProgress() / 100.0;
+        int timeFilledWidth = (int) (timeProgress * timeBarWidth);
+        g2d.setColor(Color.CYAN);
+        g2d.fillRect(timeBarX + 1, timeBarY + 1, Math.max(0, timeFilledWidth - 1), timeBarHeight - 1);
+        
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastJumpTime < 500) {
+            g2d.setColor(isBackwardJump ? new Color(255, 255, 0, 100) : new Color(255, 255, 255, 100));
+            g2d.fillRect(timeBarX + 1, timeBarY + 1, timeBarWidth - 1, timeBarHeight - 1);
+        }
+        g2d.setColor(Color.BLACK);
+        g2d.setFont(new Font("Arial", Font.PLAIN, 12));
+        g2d.drawString(String.format("Time: %.0f/%.0fs", model.getTemporalProgress() / 100.0 * model.getStageDuration(), model.getStageDuration()), timeBarX + 5, timeBarY - 5);
 
         
         int hudX = 10;
@@ -141,7 +166,6 @@ public class GameView extends JPanel {
             g2d.drawLine(model.getSelectedPort().getX(), model.getSelectedPort().getY(), mousePos.x, mousePos.y);
         }
 
-        
         if (model.isGameOver()) {
             g2d.setColor(new Color(0, 0, 0, 150));
             g2d.fillRect(250, 200, 300, 200);
@@ -170,5 +194,15 @@ public class GameView extends JPanel {
 
     private double calculateWireLength(Point p1, Point p2) {
         return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+    }
+
+    public double getStageDuration() {
+        return model.getStageDuration();
+    }
+
+    public void notifyTimeJump(boolean isBackward) {
+        lastJumpTime = System.currentTimeMillis();
+        isBackwardJump = isBackward;
+        repaint();
     }
 }
