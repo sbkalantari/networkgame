@@ -102,7 +102,7 @@ public class GameView extends JPanel {
         g2d.setFont(new Font("Arial", Font.PLAIN, 12));
         g2d.drawString(String.format("Wire: %.0f/%.0f", remainingWire, model.getMaxWireLength()), hudX + 5, hudY + 12);
         g2d.drawString(String.format("Time: %.0f%%", model.getTemporalProgress()), hudX + 5, hudY + 24);
-        double packetLoss = model.getTotalPackets() > 0 ? (model.getLostPackets() / (double) model.getTotalPackets()) * 100.0 : 0.0;
+        double packetLoss = model.getTotalSent() > 0 ? (model.getLostPackets() / (double) model.getTotalSent()) * 100.0 : 0.0;
         g2d.drawString(String.format("Loss: %.0f%%", packetLoss), hudX + 100, hudY + 12);
         g2d.drawString(String.format("Coins: %d", model.getCoins()), hudX + 100, hudY + 24);
 
@@ -147,7 +147,7 @@ public class GameView extends JPanel {
         }
 
         for (Pocket pocket : model.getPockets()) {
-            if (pocket.isLost() || pocket.getCurrentWire() == null) continue;
+            if (pocket.getState() == PocketState.Lost || pocket.getCurrentWire() == null) continue;
             Point src = pocket.getCurrentWire().getSource().getPosition();
             Point dest = pocket.getCurrentWire().getDestination().getPosition();
             Point center = pocket.getCenterOfMass(src, dest);
@@ -173,7 +173,7 @@ public class GameView extends JPanel {
             g2d.setFont(new Font("Arial", Font.BOLD, 24));
             g2d.drawString("Game Over", 350, 250);
             g2d.setFont(new Font("Arial", Font.PLAIN, 16));
-            g2d.drawString("Healthy Packets: " + (model.getTotalPackets() - model.getLostPackets()), 300, 300);
+            g2d.drawString("Healthy Packets: " + (model.getTotalSent() - model.getLostPackets()), 300, 300);
             g2d.drawString("Packet Loss: " + String.format("%.0f%%", packetLoss), 300, 320);
             returnToMenuButton.setVisible(true);
         } else if (model.isLevelPassed()) {

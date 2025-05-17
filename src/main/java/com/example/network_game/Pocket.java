@@ -11,7 +11,7 @@ public class Pocket {
     private Hop currentHop;
     private Wire currentWire;
     private double progress;
-    private boolean lost;
+    private PocketState state;
     private Point shapeOffset;
     //TODO fix dynamic health
     private int health;
@@ -19,7 +19,7 @@ public class Pocket {
 
     public Pocket() {
         this.progress = 0;
-        this.lost = false;
+        this.state = PocketState.InSource;
         this.size = 2;
         this.speed = 100;
         this.coinReward = 1;
@@ -44,14 +44,14 @@ public class Pocket {
         this.health--;
         this.lastHit = pocket;
         if (health == 0) {
-            this.lost = true;
+            state = PocketState.Lost;
             return true;
         }
         return false;
     }
 
     public void updateProgress(double deltaTime) {
-        if (currentWire == null || lost) return;
+        if (currentWire == null || state == PocketState.Lost) return;
         Port destPort = currentWire.getDestination();
         double effectiveSpeed = speed;
         if (destPort.getShape() != shape) {
@@ -83,12 +83,12 @@ public class Pocket {
         }
     }
 
-    public void setLost(boolean lost) {
-        this.lost = lost;
+    public void setState(PocketState state) {
+        this.state = state;
     }
 
-    public boolean isLost() {
-        return lost;
+    public PocketState getState() {
+        return state;
     }
 
     public Point getCenterOfMass(Point src, Point dest) {
@@ -100,7 +100,7 @@ public class Pocket {
     }
 
     public void applyImpactDisplacement(Point collisionPoint, Point src, Point dest) {
-        if (currentWire == null || lost) return;
+        if (currentWire == null || state != PocketState.InProgress) return;
         Point center = getCenterOfMass(src, dest);
         double distance = Math.sqrt(Math.pow(center.x - collisionPoint.x, 2) + Math.pow(center.y - collisionPoint.y, 2));
         double radius = 100.0;
