@@ -8,13 +8,23 @@ public class GameController {
     private GameModel model;
     private GameView view;
     private Timer animationTimer;
+    private CardLayout cardLayout;
+    private JPanel cardPanel;
 
-    public GameController(GameModel model, GameView view) {
+    public GameController(GameModel model, GameView view, CardLayout cardLayout, JPanel cardPanel) {
         this.model = model;
         this.view = view;
+        this.cardLayout = cardLayout;
+        this.cardPanel = cardPanel;
         setupListeners();
         setupPlayButton();
         setupAnimationTimer();
+    }
+
+    public void setGameModel(GameModel model) {
+        this.model = model;
+        stopAnimation();
+        view.repaint();
     }
 
     private void setupListeners() {
@@ -45,7 +55,7 @@ public class GameController {
 
         view.getReturnToMenuButton().addActionListener(e -> {
             model.resetStage();
-            view.repaint();
+            cardLayout.show(cardPanel, "MainMenu");
         });
 
         view.getNextStageButton().addActionListener(e -> {
@@ -58,7 +68,8 @@ public class GameController {
 
     private void setupPlayButton() {
         JButton playButton = new JButton("Play");
-        playButton.setBounds(10, 10, 80, 30);
+        playButton.setBounds(10, 70, 80, 30);
+        playButton.setFont(new Font("Arial", Font.PLAIN, 12));
         playButton.addActionListener(e -> {
             model.startPlaying();
             animationTimer.start();
@@ -75,6 +86,12 @@ public class GameController {
             }
         });
         animationTimer.setRepeats(true);
+    }
+
+    private void stopAnimation() {
+        if (animationTimer != null && animationTimer.isRunning()) {
+            animationTimer.stop();
+        }
     }
 
     private void handleLeftClick(Point clickPoint) {

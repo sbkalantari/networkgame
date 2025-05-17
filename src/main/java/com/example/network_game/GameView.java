@@ -10,25 +10,36 @@ public class GameView extends JPanel {
     private JButton nextStageButton;
     private long lastJumpTime;
     private boolean isBackwardJump;
+    private CardLayout cardLayout;
+    private JPanel cardPanel;
 
-    public GameView(GameModel model) {
+    public GameView(GameModel model, CardLayout cardLayout, JPanel cardPanel) {
         this.model = model;
+        this.cardLayout = cardLayout;
+        this.cardPanel = cardPanel;
         this.mousePos = new Point();
         setPreferredSize(new Dimension(800, 600));
         setLayout(null);
 
         returnToMenuButton = new JButton("Return to Menu");
-        returnToMenuButton.setBounds(350, 400, 150, 30);
+        returnToMenuButton.setBounds(650, 520, 140, 30);
+        returnToMenuButton.setFont(new Font("Arial", Font.PLAIN, 12));
         returnToMenuButton.setVisible(false);
         add(returnToMenuButton);
 
         nextStageButton = new JButton("Next Stage");
-        nextStageButton.setBounds(350, 400, 150, 30);
+        nextStageButton.setBounds(650, 480, 140, 30);
+        nextStageButton.setFont(new Font("Arial", Font.PLAIN, 12));
         nextStageButton.setVisible(false);
         add(nextStageButton);
 
         lastJumpTime = 0;
         isBackwardJump = false;
+    }
+
+    public void setGameModel(GameModel model) {
+        this.model = model;
+        repaint();
     }
 
     public void setMousePos(Point mousePos) {
@@ -81,7 +92,6 @@ public class GameView extends JPanel {
         int timeFilledWidth = (int) (timeProgress * timeBarWidth);
         g2d.setColor(Color.CYAN);
         g2d.fillRect(timeBarX + 1, timeBarY + 1, Math.max(0, timeFilledWidth - 1), timeBarHeight - 1);
-        
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastJumpTime < 500) {
             g2d.setColor(isBackwardJump ? new Color(255, 255, 0, 100) : new Color(255, 255, 255, 100));
