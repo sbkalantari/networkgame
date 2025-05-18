@@ -151,8 +151,13 @@ public class GameView extends JPanel {
             g2d.drawOval(ledX, ledY, 10, 10);
 
             for (Port port : system.ports) {
-                g2d.setColor(port == model.getSelectedPort() ? Color.RED : Color.BLUE);
-                g2d.fillRect(port.getX() - 5, port.getY() - 5, 10, 10);
+                g2d.setColor(port == model.getSelectedPort() ? Color.RED : (port.getShape() == ShapeType.Square ? Color.BLUE : Color.MAGENTA));
+                if (port.getShape() == ShapeType.Square) {
+                    g2d.fillRect(port.getX() - 5, port.getY() - 5, 10, 10);
+                } else {
+                    g2d.fillPolygon(new int[]{port.getX(), port.getX() - 5, port.getX() + 5},
+                            new int[]{port.getY() - 5, port.getY() + 5, port.getY() + 5}, 3);
+                }
             }
         }
 

@@ -18,6 +18,7 @@ public class Wire implements ValidDevice{
         return source.getType() == PortType.Output && source != null && destination != null
                 && destination.getHopConnected() != null && source.getWire() != null
                 && destination.getHopConnected() != source.getHopConnected()
-                && destination.getType() == PortType.Input;
+                && destination.getType() == PortType.Input
+                && destination.getShape() == source.getShape();
     }
 }

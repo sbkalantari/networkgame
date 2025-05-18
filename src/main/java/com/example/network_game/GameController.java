@@ -26,7 +26,6 @@ public class GameController {
         stopAnimation();
         view.repaint();
     }
-    //TODO fix bug of pressing store page first and play button
 
     private void setupListeners() {
         view.addMouseListener(new MouseAdapter() {

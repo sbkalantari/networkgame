@@ -66,20 +66,22 @@ public class GameModel {
         double inputStep = inputPorts > 1 ? (systemHeight - 2 * offset) / (double)(inputPorts - 1) : 0;
         double outputStep = outputPorts > 1 ? (systemHeight - 2 * offset) / (double)(outputPorts - 1) : 0;
 
+        
         for (int i = 0; i < inputPorts; i++) {
             Port port = new Port();
             port.setType(PortType.Input);
-            port.setShape(ShapeType.Square);
+            port.setShape(i == 0 ? ShapeType.Square : ShapeType.Triangle);
             port.setHopConnected(system);
             int portY = inputPorts == 1 ? y + systemHeight / 2 : y + offset + (int)(i * inputStep);
             port.setPosition(x, portY);
             system.ports.add(port);
         }
 
+        
         for (int i = 0; i < outputPorts; i++) {
             Port port = new Port();
             port.setType(PortType.Output);
-            port.setShape(ShapeType.Square);
+            port.setShape(i == 0 ? ShapeType.Square : ShapeType.Triangle);
             port.setHopConnected(system);
             int portY = outputPorts == 1 ? y + systemHeight / 2 : y + offset + (int)(i * outputStep);
             port.setPosition(x + systemWidth, portY);
@@ -341,19 +343,14 @@ public class GameModel {
     private Port chooseOutputPort(Pocket pocket) {
         Hop hop = pocket.getCurrentHop();
         List<Port> compatiblePorts = new ArrayList<>();
-        List<Port> emptyPorts = new ArrayList<>();
         for (Port port : hop.ports) {
             if (port.getType() == PortType.Output && port.getWire() != null && port.getWire().IsValid()) {
                 if (port.getShape() == pocket.getShapeType()) {
                     compatiblePorts.add(port);
                 }
-                emptyPorts.add(port);
             }
         }
         for (Port port : compatiblePorts) {
-            if (isPortEmpty(port)) return port;
-        }
-        for (Port port : emptyPorts) {
             if (isPortEmpty(port)) return port;
         }
         return null;
@@ -409,6 +406,18 @@ public class GameModel {
         wire.setSource(p1);
         wire.setDestination(p2);
         wire.setLength(wireLength);
+        
+        Hop destHop = p2.getHopConnected();
+        boolean hasMatchingOutput = false;
+        for (Port port : destHop.ports) {
+            if (port.getType() == PortType.Output && port.getShape() == p1.getShape()) {
+                hasMatchingOutput = true;
+                break;
+            }
+        }
+        if (!hasMatchingOutput) {
+            return null;
+        }
         p1.setWire(wire);
         p2.setWire(wire);
         wires.add(wire);
