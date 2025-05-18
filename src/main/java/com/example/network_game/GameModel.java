@@ -520,4 +520,8 @@ public class GameModel {
     public void setIsPlaying(boolean playing) {
         isPlaying = playing;
     }
+
+    public boolean getPlaying(){
+        return isPlaying;
+    }
 }

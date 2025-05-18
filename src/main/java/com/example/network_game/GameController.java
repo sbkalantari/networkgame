@@ -6,6 +6,7 @@ import java.awt.event.*;
 
 public class GameController {
     private GameModel model;
+    private boolean beforeStopState;
     private GameView view;
     private Timer animationTimer;
     private CardLayout cardLayout;
@@ -97,12 +98,13 @@ public class GameController {
         if (animationTimer != null && animationTimer.isRunning()) {
             animationTimer.stop();
         }
+        beforeStopState = model.getPlaying();
         model.setIsPlaying(false);
     }
 
     public void resumeGame() {
         if (!model.isGameOver() && !model.isLevelPassed()) {
-            model.setIsPlaying(true);
+            model.setIsPlaying(beforeStopState);
             animationTimer.start();
         }
     }
