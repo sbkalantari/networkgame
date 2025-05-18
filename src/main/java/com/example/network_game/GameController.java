@@ -26,6 +26,7 @@ public class GameController {
         stopAnimation();
         view.repaint();
     }
+    //TODO fix bug of pressing store page first and play button
 
     private void setupListeners() {
         view.addMouseListener(new MouseAdapter() {
@@ -64,6 +65,11 @@ public class GameController {
             animationTimer.start();
             view.repaint();
         });
+
+        view.getStoreButton().addActionListener(e -> {
+            pauseGame();
+            cardLayout.show(cardPanel, "Store");
+        });
     }
 
     private void setupPlayButton() {
@@ -86,6 +92,20 @@ public class GameController {
             }
         });
         animationTimer.setRepeats(true);
+    }
+
+    public void pauseGame() {
+        if (animationTimer != null && animationTimer.isRunning()) {
+            animationTimer.stop();
+        }
+        model.setIsPlaying(false);
+    }
+
+    public void resumeGame() {
+        if (!model.isGameOver() && !model.isLevelPassed()) {
+            model.setIsPlaying(true);
+            animationTimer.start();
+        }
     }
 
     private void stopAnimation() {

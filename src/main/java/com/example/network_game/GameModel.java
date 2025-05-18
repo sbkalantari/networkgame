@@ -3,6 +3,7 @@ package com.example.network_game;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.Timer;
 
 public class GameModel {
     private List<Hop> systems;
@@ -20,6 +21,10 @@ public class GameModel {
     private int inProgress;
     private boolean isGameOver;
     private boolean isLevelPassed;
+    private boolean isOAtarActive;
+    private boolean isOAiryamanActive;
+    private Timer oAtarTimer;
+    private Timer oAiryamanTimer;
 
     public GameModel() {
         this(new int[][]{{100, 100}, {500, 100}, {100, 400}, {500, 400}}, 60.0, 3000.0);
@@ -41,6 +46,8 @@ public class GameModel {
         inProgress = 0;
         isGameOver = false;
         isLevelPassed = false;
+        isOAtarActive = false;
+        isOAiryamanActive = false;
         initializeSystems(systemPositions);
     }
 
@@ -84,6 +91,54 @@ public class GameModel {
         return system;
     }
 
+    public boolean spendCoins(int amount) {
+        if (coins >= amount) {
+            coins -= amount;
+            return true;
+        }
+        return false;
+    }
+
+    public void activateOAtar() {
+        isOAtarActive = true;
+        if (oAtarTimer != null && oAtarTimer.isRunning()) {
+            oAtarTimer.stop();
+        }
+        oAtarTimer = new Timer(10000, e -> {
+            isOAtarActive = false;
+            oAtarTimer = null;
+        });
+        oAtarTimer.setRepeats(false);
+        oAtarTimer.start();
+    }
+
+    public void activateOAiryaman() {
+        isOAiryamanActive = true;
+        if (oAiryamanTimer != null && oAiryamanTimer.isRunning()) {
+            oAiryamanTimer.stop();
+        }
+        oAiryamanTimer = new Timer(5000, e -> {
+            isOAiryamanActive = false;
+            oAiryamanTimer = null;
+        });
+        oAiryamanTimer.setRepeats(false);
+        oAiryamanTimer.start();
+    }
+
+    public void activateOAnahita() {
+        for (Pocket pocket : pockets) {
+            pocket.resetHealth();
+        }
+    }
+
+    public boolean isOAtarActive() {
+        return isOAtarActive;
+    }
+
+    public boolean isOAiryamanActive() {
+        return isOAiryamanActive;
+    }
+
     public void startPlaying() {
         if (!isPlaying) {
             isPlaying = true;
@@ -102,6 +157,10 @@ public class GameModel {
             inProgress = 0;
             isGameOver = false;
             isLevelPassed = false;
+            isOAtarActive = false;
+            isOAiryamanActive = false;
+            if (oAtarTimer != null) oAtarTimer.stop();
+            if (oAiryamanTimer != null) oAiryamanTimer.stop();
         }
     }
 
@@ -119,39 +178,43 @@ public class GameModel {
 
         List<Pocket> pocketsToRemove = new ArrayList<>();
 
-        for (int i = 0; i < pockets.size(); i++) {
-            Pocket p1 = pockets.get(i);
-            if (p1.getState() != PocketState.InProgress || p1.getCurrentWire() == null) continue;
-            boolean safe = true;
-            for (int j = i + 1; j < pockets.size(); j++) {
-                Pocket p2 = pockets.get(j);
-                if (p2.getState() != PocketState.InProgress || p2.getCurrentWire() == null) continue;
-                Point c1 = p1.getCenterOfMass(p1.getCurrentWire().getSource().getPosition(), p1.getCurrentWire().getDestination().getPosition());
-                Point c2 = p2.getCenterOfMass(p2.getCurrentWire().getSource().getPosition(), p2.getCurrentWire().getDestination().getPosition());
-                if (c1 != null && c2 != null && p1.getShape(c1).intersects(p2.getShape(c2).getBounds2D())) {
-                    safe = false;
-                    if (p1.getLastHit() == p2) {
-                        continue;
-                    }
-                    if (p1.gotHit(p2))
-                        pocketsToRemove.add(p1);
-                    if (p2.gotHit(p1))
-                        pocketsToRemove.add(p2);
-                    Point collisionPoint = new Point((c1.x + c2.x) / 2, (c1.y + c2.y) / 2);
-                    for (Pocket nearby : pockets) {
-                        if (nearby.getState() == PocketState.InProgress && nearby.getCurrentWire() != null) {
-                            nearby.applyImpactDisplacement(
-                                    collisionPoint,
-                                    nearby.getCurrentWire().getSource().getPosition(),
-                                    nearby.getCurrentWire().getDestination().getPosition()
-                            );
+        if (!isOAiryamanActive) {
+            for (int i = 0; i < pockets.size(); i++) {
+                Pocket p1 = pockets.get(i);
+                if (p1.getState() != PocketState.InProgress || p1.getCurrentWire() == null) continue;
+                boolean safe = true;
+                for (int j = i + 1; j < pockets.size(); j++) {
+                    Pocket p2 = pockets.get(j);
+                    if (p2.getState() != PocketState.InProgress || p2.getCurrentWire() == null) continue;
+                    Point c1 = p1.getCenterOfMass(p1.getCurrentWire().getSource().getPosition(), p1.getCurrentWire().getDestination().getPosition());
+                    Point c2 = p2.getCenterOfMass(p2.getCurrentWire().getSource().getPosition(), p2.getCurrentWire().getDestination().getPosition());
+                    if (c1 != null && c2 != null && p1.getShape(c1).intersects(p2.getShape(c2).getBounds2D())) {
+                        safe = false;
+                        if (p1.getLastHit() == p2) {
+                            continue;
                         }
+                        if (p1.gotHit(p2))
+                            pocketsToRemove.add(p1);
+                        if (p2.gotHit(p1))
+                            pocketsToRemove.add(p2);
+                        Point collisionPoint = new Point((c1.x + c2.x) / 2, (c1.y + c2.y) / 2);
+                        if (!isOAtarActive) {
+                            for (Pocket nearby : pockets) {
+                                if (nearby.getState() == PocketState.InProgress && nearby.getCurrentWire() != null) {
+                                    nearby.applyImpactDisplacement(
+                                            collisionPoint,
+                                            nearby.getCurrentWire().getSource().getPosition(),
+                                            nearby.getCurrentWire().getDestination().getPosition()
+                                    );
+                                }
+                            }
+                        }
+                        break;
                     }
-                    break;
                 }
-            }
-            if (safe) {
-                p1.setLastHit(null);
+                if (safe) {
+                    p1.setLastHit(null);
+                }
             }
         }
 
@@ -269,6 +332,10 @@ public class GameModel {
         isLevelPassed = false;
         isPlaying = false;
         selectedPort = null;
+        isOAtarActive = false;
+        isOAiryamanActive = false;
+        if (oAtarTimer != null) oAtarTimer.stop();
+        if (oAiryamanTimer != null) oAiryamanTimer.stop();
     }
 
     private Port chooseOutputPort(Pocket pocket) {
@@ -439,5 +506,9 @@ public class GameModel {
 
     public double getStageDuration() {
         return stageDuration;
+    }
+
+    public void setIsPlaying(boolean playing) {
+        isPlaying = playing;
     }
 }

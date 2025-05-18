@@ -15,17 +15,20 @@ public class NetworkGame extends JFrame {
         cardPanel.setPreferredSize(new Dimension(800, 600));
 
         
-        GameModel initialModel = new GameModel(); 
+        GameModel initialModel = new GameModel();
         GameView view = new GameView(initialModel, cardLayout, cardPanel);
         GameController controller = new GameController(initialModel, view, cardLayout, cardPanel);
         GameStagesPanel stagesPanel = new GameStagesPanel(cardLayout, cardPanel);
         GameStageController stageController = new GameStageController(stagesPanel, cardLayout, cardPanel, view, controller);
+        StorePanel storePanel = new StorePanel(cardLayout, cardPanel, initialModel);
+        StoreController storeController = new StoreController(storePanel, initialModel, cardLayout, cardPanel, controller);
 
         
-        cardPanel.add(new MainMenu(cardLayout, cardPanel, initialModel), "MainMenu");
+        cardPanel.add(new MainMenu(cardLayout, cardPanel, initialModel, view, controller), "MainMenu");
         cardPanel.add(view, "Game");
         cardPanel.add(stagesPanel, "Stages");
         cardPanel.add(createPlaceholderPanel("Settings", cardLayout, cardPanel), "Settings");
+        cardPanel.add(storePanel, "Store");
 
         
         add(cardPanel);

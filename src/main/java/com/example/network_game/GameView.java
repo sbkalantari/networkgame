@@ -8,6 +8,7 @@ public class GameView extends JPanel {
     private Point mousePos;
     private JButton returnToMenuButton;
     private JButton nextStageButton;
+    private JButton storeButton;
     private long lastJumpTime;
     private boolean isBackwardJump;
     private CardLayout cardLayout;
@@ -33,6 +34,11 @@ public class GameView extends JPanel {
         nextStageButton.setVisible(false);
         add(nextStageButton);
 
+        storeButton = new JButton("Store");
+        storeButton.setBounds(10, 100, 80, 30);
+        storeButton.setFont(new Font("Arial", Font.PLAIN, 12));
+        add(storeButton);
+
         lastJumpTime = 0;
         isBackwardJump = false;
     }
@@ -53,6 +59,10 @@ public class GameView extends JPanel {
 
     public JButton getNextStageButton() {
         return nextStageButton;
+    }
+
+    public JButton getStoreButton() {
+        return storeButton;
     }
 
     @Override

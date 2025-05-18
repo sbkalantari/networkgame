@@ -13,7 +13,6 @@ public class Pocket {
     private double progress;
     private PocketState state;
     private Point shapeOffset;
-    //TODO fix dynamic health
     private int health;
     private Pocket lastHit;
 
@@ -40,14 +39,19 @@ public class Pocket {
         }
     }
 
-    public boolean gotHit(Pocket pocket){
+    public boolean gotHit(Pocket pocket) {
         this.health--;
         this.lastHit = pocket;
-        if (health == 0) {
+        if (health <= 0) {
             state = PocketState.Lost;
             return true;
         }
         return false;
+    }
+
+    public void resetHealth() {
+        this.health = 2;
+        this.lastHit = null;
     }
 
     public void updateProgress(double deltaTime) {
@@ -73,11 +77,11 @@ public class Pocket {
         int x = center.x + shapeOffset.x;
         int y = center.y + shapeOffset.y;
         if (shape == ShapeType.Square) {
-            return new Rectangle2D.Double(x - 8, y - 8, 16, 16); 
+            return new Rectangle2D.Double(x - 8, y - 8, 16, 16);
         } else {
             return new Polygon(
-                    new int[]{x, x - 10, x + 10}, 
-                    new int[]{y - 10, y + 10, y + 10}, 
+                    new int[]{x, x - 10, x + 10},
+                    new int[]{y - 10, y + 10, y + 10},
                     3
             );
         }
@@ -107,18 +111,14 @@ public class Pocket {
         if (distance < radius && distance > 0) {
             double strength = (radius - distance) / radius;
             double maxDisplacement = 5.0;
-            
             double wireDx = dest.x - src.x;
             double wireDy = dest.y - src.y;
             double wireLength = Math.sqrt(wireDx * wireDx + wireDy * wireDy);
             if (wireLength == 0) return;
-            
             double perpDx = -wireDy / wireLength;
             double perpDy = wireDx / wireLength;
-            
             double dx = center.x - collisionPoint.x;
             double dy = center.y - collisionPoint.y;
-            
             double dot = dx * perpDx + dy * perpDy;
             double displacement = strength * maxDisplacement * Math.signum(dot);
             shapeOffset.x += (int)(perpDx * displacement);

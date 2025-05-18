@@ -8,11 +8,15 @@ public class MainMenu extends JPanel {
     private CardLayout cardLayout;
     private JPanel cardPanel;
     private GameModel model;
+    private GameView gameView;
+    private GameController gameController;
 
-    public MainMenu(CardLayout cardLayout, JPanel cardPanel, GameModel model) {
+    public MainMenu(CardLayout cardLayout, JPanel cardPanel, GameModel model, GameView gameView, GameController gameController) {
         this.cardLayout = cardLayout;
         this.cardPanel = cardPanel;
         this.model = model;
+        this.gameView = gameView;
+        this.gameController = gameController;
         setPreferredSize(new Dimension(800, 600));
         setLayout(null);
         setBackground(Color.DARK_GRAY);
@@ -35,6 +39,8 @@ public class MainMenu extends JPanel {
         startButton.setForeground(Color.CYAN);
         startButton.addActionListener(e -> {
             model.resetStage();
+            gameView.setGameModel(model);
+            gameController.setGameModel(model);
             cardLayout.show(cardPanel, "Game");
         });
         add(startButton);
