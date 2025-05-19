@@ -66,7 +66,6 @@ public class GameModel implements ValidDevice {
         double inputStep = inputPorts > 1 ? (systemHeight - 2 * offset) / (double)(inputPorts - 1) : 0;
         double outputStep = outputPorts > 1 ? (systemHeight - 2 * offset) / (double)(outputPorts - 1) : 0;
 
-        
         for (int i = 0; i < inputPorts; i++) {
             Port port = new Port();
             port.setType(PortType.Input);
@@ -77,7 +76,6 @@ public class GameModel implements ValidDevice {
             system.ports.add(port);
         }
 
-        
         for (int i = 0; i < outputPorts; i++) {
             Port port = new Port();
             port.setType(PortType.Output);
@@ -175,8 +173,6 @@ public class GameModel implements ValidDevice {
             isPlaying = false;
             isGameOver = getTotalSent() > 0 && (lostPackets / (double) getTotalSent()) > 0.5;
             isLevelPassed = !isGameOver;
-            if (isLevelPassed)
-                AudioManager.playStageCompleteSound();
             return;
         }
 
@@ -284,14 +280,14 @@ public class GameModel implements ValidDevice {
         }
 
         if (inProgress != 0 && (getTotalSent() == 0 || (lostPackets / (double) getTotalSent()) <= 0.5)) {
-            found = false;
+            boolean foundProgress = false;
             for (Pocket pocket : pockets) {
                 if (pocket.getState() == PocketState.InProgress) {
-                    found = true;
+                    foundProgress = true;
                     break;
                 }
             }
-            if (!found) {
+            if (!foundProgress) {
                 isLevelPassed = true;
                 isPlaying = false;
                 AudioManager.playStageCompleteSound();
@@ -414,7 +410,7 @@ public class GameModel implements ValidDevice {
         wire.setSource(p1);
         wire.setDestination(p2);
         wire.setLength(wireLength);
-        
+
         Hop destHop = p2.getHopConnected();
         boolean hasMatchingOutput = false;
         for (Port port : destHop.ports) {

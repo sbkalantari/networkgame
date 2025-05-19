@@ -11,12 +11,16 @@ public class GameController {
     private Timer animationTimer;
     private CardLayout cardLayout;
     private JPanel cardPanel;
+    private GameStageController stageController;
+    private int currentStage; 
 
     public GameController(GameModel model, GameView view, CardLayout cardLayout, JPanel cardPanel) {
         this.model = model;
         this.view = view;
         this.cardLayout = cardLayout;
         this.cardPanel = cardPanel;
+        this.stageController = new GameStageController(new GameStagesPanel(cardLayout, cardPanel), cardLayout, cardPanel, view, this);
+        this.currentStage = 1; 
         setupListeners();
         setupPlayButton();
         setupAnimationTimer();
@@ -25,6 +29,7 @@ public class GameController {
     public void setGameModel(GameModel model) {
         this.model = model;
         stopAnimation();
+        view.setGameModel(model); 
         view.repaint();
     }
 
@@ -56,13 +61,19 @@ public class GameController {
 
         view.getReturnToMenuButton().addActionListener(e -> {
             model.resetStage();
+            currentStage = 1; 
             cardLayout.show(cardPanel, "MainMenu");
         });
 
         view.getNextStageButton().addActionListener(e -> {
-            model.resetStage();
-            model.startPlaying();
-            animationTimer.start();
+            
+            currentStage = (currentStage % 2) + 1; 
+            if (currentStage == 1) {
+                stageController.selectStage1();
+            } else {
+                stageController.selectStage2();
+            }
+            System.out.println("Advanced to Stage " + currentStage); 
             view.repaint();
         });
 
@@ -77,7 +88,7 @@ public class GameController {
         playButton.setBounds(10, 70, 80, 30);
         playButton.setFont(new Font("Arial", Font.PLAIN, 12));
         playButton.addActionListener(e -> {
-            if(model.IsValid()){
+            if (model.IsValid()) {
                 model.startPlaying();
                 animationTimer.start();
                 view.repaint();
@@ -125,7 +136,7 @@ public class GameController {
                 model.setSelectedPort(clickedPort);
             } else {
                 if (model.connectPorts(model.getSelectedPort(), clickedPort) != null) {
-                    AudioManager.playConnectSound(); 
+                    AudioManager.playConnectSound();
                     System.out.println("Port connected, connect sound played"); 
                 }
                 model.setSelectedPort(null);
@@ -139,7 +150,7 @@ public class GameController {
         Wire wireToRemove = model.findWireAt(clickPoint);
         if (wireToRemove != null) {
             model.removeWire(wireToRemove);
-            AudioManager.playCutSound(); 
+            AudioManager.playCutSound();
             System.out.println("Wire removed, cut sound played"); 
             view.repaint();
         }
