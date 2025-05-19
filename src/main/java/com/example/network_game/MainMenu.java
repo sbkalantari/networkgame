@@ -2,37 +2,25 @@ package com.example.network_game;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 
 public class MainMenu extends JPanel {
-    private CardLayout cardLayout;
-    private JPanel cardPanel;
-    private GameModel model;
-    private GameView gameView;
-    private GameController gameController;
+    private JButton startButton;
+    private JButton stagesButton;
+    private JButton settingsButton;
+    private JButton exitButton;
 
     public MainMenu(CardLayout cardLayout, JPanel cardPanel, GameModel model, GameView gameView, GameController gameController) {
-        this.cardLayout = cardLayout;
-        this.cardPanel = cardPanel;
-        this.model = model;
-        this.gameView = gameView;
-        this.gameController = gameController;
         setPreferredSize(new Dimension(800, 600));
         setLayout(null);
         setBackground(Color.DARK_GRAY);
-        setupComponents();
-    }
 
-    private void setupComponents() {
-        
         JLabel titleLabel = new JLabel("Network Game", SwingConstants.CENTER);
         titleLabel.setBounds(200, 100, 400, 50);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 36));
         titleLabel.setForeground(Color.CYAN);
         add(titleLabel);
 
-        
-        JButton startButton = new JButton("Start Game");
+        startButton = new JButton("Start Game");
         startButton.setBounds(300, 200, 200, 40);
         startButton.setFont(new Font("Arial", Font.PLAIN, 16));
         startButton.setBackground(Color.BLACK);
@@ -42,23 +30,19 @@ public class MainMenu extends JPanel {
             gameView.setGameModel(model);
             gameController.setGameModel(model);
             cardLayout.show(cardPanel, "Game");
+            System.out.println("Game started"); 
         });
         add(startButton);
 
-        
-        JButton stagesButton = new JButton("Game Stages");
+        stagesButton = new JButton("Game Stages");
         stagesButton.setBounds(300, 260, 200, 40);
         stagesButton.setFont(new Font("Arial", Font.PLAIN, 16));
         stagesButton.setBackground(Color.BLACK);
         stagesButton.setForeground(Color.CYAN);
-        stagesButton.addActionListener(e -> {
-            model.resetStage();
-            cardLayout.show(cardPanel, "Stages");
-        });
+        stagesButton.addActionListener(e -> cardLayout.show(cardPanel, "Stages"));
         add(stagesButton);
 
-        
-        JButton settingsButton = new JButton("Game Settings");
+        settingsButton = new JButton("Game Settings");
         settingsButton.setBounds(300, 320, 200, 40);
         settingsButton.setFont(new Font("Arial", Font.PLAIN, 16));
         settingsButton.setBackground(Color.BLACK);
@@ -66,8 +50,7 @@ public class MainMenu extends JPanel {
         settingsButton.addActionListener(e -> cardLayout.show(cardPanel, "Settings"));
         add(settingsButton);
 
-        
-        JButton exitButton = new JButton("Exit Game");
+        exitButton = new JButton("Exit Game");
         exitButton.setBounds(300, 380, 200, 40);
         exitButton.setFont(new Font("Arial", Font.PLAIN, 16));
         exitButton.setBackground(Color.BLACK);

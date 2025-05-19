@@ -10,7 +10,20 @@ public class NetworkGame extends JFrame {
         setResizable(false);
 
         
-        CardLayout cardLayout = new CardLayout();
+        CardLayout cardLayout = new CardLayout() {
+            @Override
+            public void show(Container parent, String name) {
+                super.show(parent, name);
+                
+                if ("Game".equals(name) || "Settings".equals(name)) {
+                    AudioManager.playBackgroundMusic();
+                    System.out.println("Showing " + name + ", background music started");
+                } else {
+                    AudioManager.stopAllSounds();
+                    System.out.println("Showing " + name + ", background music stopped");
+                }
+            }
+        };
         JPanel cardPanel = new JPanel(cardLayout);
         cardPanel.setPreferredSize(new Dimension(800, 600));
 
@@ -22,12 +35,14 @@ public class NetworkGame extends JFrame {
         GameStageController stageController = new GameStageController(stagesPanel, cardLayout, cardPanel, view, controller);
         StorePanel storePanel = new StorePanel(cardLayout, cardPanel, initialModel);
         StoreController storeController = new StoreController(storePanel, initialModel, cardLayout, cardPanel, controller);
+        SettingsPanel settingsPanel = new SettingsPanel(cardLayout, cardPanel);
+        SettingsController settingsController = new SettingsController(settingsPanel, cardLayout, cardPanel);
 
         
         cardPanel.add(new MainMenu(cardLayout, cardPanel, initialModel, view, controller), "MainMenu");
         cardPanel.add(view, "Game");
         cardPanel.add(stagesPanel, "Stages");
-        cardPanel.add(createPlaceholderPanel("Settings", cardLayout, cardPanel), "Settings");
+        cardPanel.add(settingsPanel, "Settings");
         cardPanel.add(storePanel, "Store");
 
         
@@ -35,29 +50,6 @@ public class NetworkGame extends JFrame {
         pack();
         setLocationRelativeTo(null);
         cardLayout.show(cardPanel, "MainMenu");
-    }
-
-    private JPanel createPlaceholderPanel(String title, CardLayout cardLayout, JPanel cardPanel) {
-        JPanel panel = new JPanel();
-        panel.setPreferredSize(new Dimension(800, 600));
-        panel.setBackground(Color.DARK_GRAY);
-        panel.setLayout(null);
-
-        JLabel label = new JLabel(title + " (Coming Soon)", SwingConstants.CENTER);
-        label.setBounds(200, 200, 400, 50);
-        label.setFont(new Font("Arial", Font.BOLD, 24));
-        label.setForeground(Color.CYAN);
-        panel.add(label);
-
-        JButton backButton = new JButton("Back to Menu");
-        backButton.setBounds(300, 400, 200, 40);
-        backButton.setFont(new Font("Arial", Font.PLAIN, 16));
-        backButton.setBackground(Color.BLACK);
-        backButton.setForeground(Color.CYAN);
-        backButton.addActionListener(e -> cardLayout.show(cardPanel, "MainMenu"));
-        panel.add(backButton);
-
-        return panel;
     }
 
     public static void main(String[] args) {

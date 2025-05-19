@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.Timer;
 
-public class GameModel {
+public class GameModel implements ValidDevice {
     private List<Hop> systems;
     private List<Wire> wires;
     private List<Pocket> pockets;
@@ -173,8 +173,10 @@ public class GameModel {
         if (currentTime >= stageDuration) {
             currentTime = stageDuration;
             isPlaying = false;
-            isGameOver = totalPackets > 0 && (lostPackets / (double) totalPackets) > 0.5;
+            isGameOver = getTotalSent() > 0 && (lostPackets / (double) getTotalSent()) > 0.5;
             isLevelPassed = !isGameOver;
+            if (isLevelPassed)
+                AudioManager.playStageCompleteSound();
             return;
         }
 
@@ -227,10 +229,15 @@ public class GameModel {
             }
         }
 
+        boolean found = false;
         for (Pocket pocket : pocketsToRemove) {
             if (pocket.getState() != PocketState.Lost) continue;
             lostPackets++;
             inProgress--;
+            found = true;
+        }
+        if (found) {
+            AudioManager.playDamageSound();
         }
 
         pockets.removeAll(pocketsToRemove);
@@ -271,13 +278,13 @@ public class GameModel {
         }
         pockets.removeAll(pocketsToRemove);
 
-        if (totalPackets > 0 && (lostPackets / (double) getTotalSent()) > 0.5) {
+        if (getTotalSent() > 0 && (lostPackets / (double) getTotalSent()) > 0.5) {
             isGameOver = true;
             isPlaying = false;
         }
 
-        if (inProgress != 0 && (totalPackets == 0 || (lostPackets / (double) getTotalSent()) <= 0.5)) {
-            boolean found = false;
+        if (inProgress != 0 && (getTotalSent() == 0 || (lostPackets / (double) getTotalSent()) <= 0.5)) {
+            found = false;
             for (Pocket pocket : pockets) {
                 if (pocket.getState() == PocketState.InProgress) {
                     found = true;
@@ -287,12 +294,13 @@ public class GameModel {
             if (!found) {
                 isLevelPassed = true;
                 isPlaying = false;
+                AudioManager.playStageCompleteSound();
             }
         }
     }
 
     public void jumpToTime(double targetTime) {
-        if (!isPlaying || isGameOver || isLevelPassed) return;
+        if (!isPlaying || isGameOver || isLevelPassed || !IsValid()) return;
 
         targetTime = Math.min(targetTime, stageDuration);
         targetTime = Math.max(targetTime, 0.0);
@@ -523,5 +531,12 @@ public class GameModel {
 
     public boolean getPlaying(){
         return isPlaying;
+    }
+
+    public boolean IsValid() {
+        for (Hop hop : systems)
+            if (!hop.IsValid())
+                return false;
+        return true;
     }
 }

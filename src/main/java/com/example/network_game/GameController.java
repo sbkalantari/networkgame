@@ -77,9 +77,11 @@ public class GameController {
         playButton.setBounds(10, 70, 80, 30);
         playButton.setFont(new Font("Arial", Font.PLAIN, 12));
         playButton.addActionListener(e -> {
-            model.startPlaying();
-            animationTimer.start();
-            view.repaint();
+            if(model.IsValid()){
+                model.startPlaying();
+                animationTimer.start();
+                view.repaint();
+            }
         });
         view.add(playButton);
     }
@@ -122,7 +124,10 @@ public class GameController {
             if (model.getSelectedPort() == null) {
                 model.setSelectedPort(clickedPort);
             } else {
-                model.connectPorts(model.getSelectedPort(), clickedPort);
+                if (model.connectPorts(model.getSelectedPort(), clickedPort) != null) {
+                    AudioManager.playConnectSound(); 
+                    System.out.println("Port connected, connect sound played"); 
+                }
                 model.setSelectedPort(null);
             }
             view.repaint();
@@ -132,7 +137,11 @@ public class GameController {
     private void handleRightClick(Point clickPoint) {
         if (model.isGameOver() || model.isLevelPassed()) return;
         Wire wireToRemove = model.findWireAt(clickPoint);
-        model.removeWire(wireToRemove);
-        view.repaint();
+        if (wireToRemove != null) {
+            model.removeWire(wireToRemove);
+            AudioManager.playCutSound(); 
+            System.out.println("Wire removed, cut sound played"); 
+            view.repaint();
+        }
     }
 }
