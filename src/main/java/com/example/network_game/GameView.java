@@ -201,24 +201,20 @@ public class GameView extends JPanel {
             }
         }
 
-        
+
         for (Pocket pocket : model.getPockets()) {
             if (pocket.getState() == PocketState.InProgress && pocket.getCurrentWire() != null) {
                 Point src = pocket.getCurrentWire().getSource().getPosition();
                 Point dst = pocket.getCurrentWire().getDestination().getPosition();
-                double progress = pocket.getProgress();
-                int x = (int) (src.x + (dst.x - src.x) * progress);
-                int y = (int) (src.y + (dst.y - src.y) * progress);
-                Shape shape = pocket.getShapeType() == ShapeType.Square ?
-                        new Rectangle2D.Double(x - 7.5, y - 7.5, 15, 15) : 
-                        new Polygon(new int[]{x - 7, x + 7, x}, new int[]{y - 7, y - 7, y + 7}, 3); 
-                g2d.setColor(pocket.getShapeType() == ShapeType.Square ? new Color(0, 200, 200) : new Color(200, 0, 200));
-                g2d.fill(shape);
-                g2d.setColor(Color.WHITE);
-                g2d.draw(shape);
-                
-                g2d.setColor(Color.WHITE);
-                g2d.fillOval(x - 2, y - 2, 4, 4);
+                Point center = pocket.getCenterOfMass(src, dst);
+                if (center != null) {
+                    Shape shape = pocket.getShape(center); 
+                    g2d.setColor(pocket.getShapeType() == ShapeType.Square ? new Color(0, 200, 200) : new Color(200, 0, 200));
+                    g2d.fill(shape);
+                    g2d.setColor(Color.WHITE);
+                    g2d.draw(shape);
+                    g2d.fillOval(center.x - 2, center.y - 2, 4, 4); 
+                }
             }
         }
 

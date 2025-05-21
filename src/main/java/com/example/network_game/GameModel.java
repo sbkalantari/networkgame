@@ -535,9 +535,9 @@ public class GameModel implements ValidDevice {
     }
 
     public boolean IsValid() {
-//
-//
-//
+        for (Hop hop : systems)
+            if (!hop.IsValid())
+                return false;
         return true;
     }
 }
