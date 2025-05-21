@@ -19,7 +19,7 @@ public class Pocket {
     public Pocket() {
         this.progress = 0;
         this.state = PocketState.InSource;
-        this.size = 2;
+        this.size = 3; 
         this.speed = 100;
         this.coinReward = 1;
         this.shapeOffset = new Point(0, 0);
@@ -29,17 +29,18 @@ public class Pocket {
     public void setShape(ShapeType shape) {
         this.shape = shape;
         if (shape == ShapeType.Square) {
-            this.size = 2;
+            this.size = 3; 
             this.coinReward = 1;
             this.speed = 100;
         } else {
-            this.size = 3;
+            this.size = 4.5; 
             this.coinReward = 2;
             this.speed = 120;
         }
     }
 
     public boolean gotHit(Pocket pocket) {
+        System.out.println("got hit");
         this.health--;
         this.lastHit = pocket;
         if (health <= 0) {
@@ -77,11 +78,11 @@ public class Pocket {
         int x = center.x + shapeOffset.x;
         int y = center.y + shapeOffset.y;
         if (shape == ShapeType.Square) {
-            return new Rectangle2D.Double(x - 8, y - 8, 16, 16);
+            return new Rectangle2D.Double(x - 12, y - 12, 24, 24); 
         } else {
             return new Polygon(
-                    new int[]{x, x - 10, x + 10},
-                    new int[]{y - 10, y + 10, y + 10},
+                    new int[]{x, x - 15, x + 15}, 
+                    new int[]{y - 15, y + 15, y + 15},
                     3
             );
         }

@@ -2,55 +2,293 @@ package com.example.network_game;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.geom.*;
 
 public class GameView extends JPanel {
     private GameModel model;
-    private Point mousePos;
+    private CardLayout cardLayout;
+    private JPanel cardPanel;
     private JButton returnToMenuButton;
     private JButton nextStageButton;
     private JButton storeButton;
-    private long lastJumpTime;
-    private boolean isBackwardJump;
-    private CardLayout cardLayout;
-    private JPanel cardPanel;
+    private JButton playButton;
+    private Point mousePos;
+    private static boolean stageCompletePlayed = false; 
+    private Port hoveredPort; 
 
     public GameView(GameModel model, CardLayout cardLayout, JPanel cardPanel) {
         this.model = model;
         this.cardLayout = cardLayout;
         this.cardPanel = cardPanel;
-        this.mousePos = new Point();
         setPreferredSize(new Dimension(800, 600));
         setLayout(null);
+        setBackground(Color.BLACK); 
+        setupButtons();
+        setFocusable(true);
+    }
 
-        returnToMenuButton = new JButton("Return to Menu");
-        returnToMenuButton.setBounds(650, 520, 140, 30);
-        returnToMenuButton.setFont(new Font("Arial", Font.PLAIN, 12));
-        returnToMenuButton.setVisible(false);
+    private void setupButtons() {
+        
+        Font buttonFont = new Font("Arial", Font.BOLD, 14);
+        Color buttonColor = new Color(0, 200, 200); 
+        Color buttonHover = new Color(200, 0, 200); 
+
+        returnToMenuButton = new JButton("Return to Menu") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(getMousePosition() != null && contains(getMousePosition()) ? buttonHover : buttonColor);
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                g2d.setColor(Color.WHITE);
+                g2d.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
+                super.paintComponent(g);
+            }
+        };
+        returnToMenuButton.setBounds(10, 10, 150, 30);
+        returnToMenuButton.setFont(buttonFont);
+        returnToMenuButton.setForeground(Color.WHITE);
+        returnToMenuButton.setContentAreaFilled(false);
+        returnToMenuButton.setBorderPainted(false);
         add(returnToMenuButton);
 
-        nextStageButton = new JButton("Next Stage");
-        nextStageButton.setBounds(650, 480, 140, 30);
-        nextStageButton.setFont(new Font("Arial", Font.PLAIN, 12));
-        nextStageButton.setVisible(false);
+        nextStageButton = new JButton("Next Stage") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(getMousePosition() != null && contains(getMousePosition()) ? buttonHover : buttonColor);
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                g2d.setColor(Color.WHITE);
+                g2d.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
+                super.paintComponent(g);
+            }
+        };
+        nextStageButton.setBounds(10, 50, 150, 30);
+        nextStageButton.setFont(buttonFont);
+        returnToMenuButton.setForeground(Color.WHITE);
+        nextStageButton.setForeground(Color.WHITE);
+        nextStageButton.setContentAreaFilled(false);
+        nextStageButton.setBorderPainted(false);
         add(nextStageButton);
 
-        storeButton = new JButton("Store");
-        storeButton.setBounds(10, 100, 80, 30);
-        storeButton.setFont(new Font("Arial", Font.PLAIN, 12));
-        add(storeButton);
+        playButton = new JButton("Play") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(getMousePosition() != null && contains(getMousePosition()) ? buttonHover : buttonColor);
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                g2d.setColor(Color.WHITE);
+                g2d.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
+                super.paintComponent(g);
+            }
+        };
+        playButton.setBounds(10, 90, 80, 30);
+        playButton.setFont(buttonFont);
+        playButton.setForeground(Color.WHITE);
+        playButton.setContentAreaFilled(false);
+        playButton.setBorderPainted(false);
+        add(playButton);
 
-        lastJumpTime = 0;
-        isBackwardJump = false;
+        storeButton = new JButton("Store") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2d.setColor(getMousePosition() != null && contains(getMousePosition()) ? buttonHover : buttonColor);
+                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                g2d.setColor(Color.WHITE);
+                g2d.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
+                super.paintComponent(g);
+            }
+        };
+        storeButton.setBounds(10, 130, 80, 30);
+        storeButton.setFont(buttonFont);
+        storeButton.setForeground(Color.WHITE);
+        storeButton.setContentAreaFilled(false);
+        storeButton.setBorderPainted(false);
+        add(storeButton);
+    }
+
+    
+    private double calculateWireLength(Point p1, Point p2) {
+        return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Graphics2D g2d = (Graphics2D) g;
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        
+        g2d.setColor(new Color(10, 10, 30)); 
+        g2d.fillRect(0, 0, getWidth(), getHeight());
+
+        
+        for (int i = 0; i < model.getSystems().size(); i++) {
+            Hop system = model.getSystems().get(i);
+            int x = system.getX();
+            int y = system.getY();
+            int width = system.getWidth();
+            int height = system.getHeight();
+            boolean isSource = (i == 0); 
+            
+            if (isSource) {
+                
+                g2d.setPaint(new RadialGradientPaint(x + width / 2, y + height / 2, 50, new float[]{0, 1}, new Color[]{new Color(200, 0, 200, 100), new Color(200, 0, 200, 0)}));
+                g2d.fill(new Ellipse2D.Double(x - 10, y - 10, width + 20, height + 20));
+                
+                g2d.setColor(new Color(200, 0, 200));
+            } else {
+                g2d.setColor(new Color(0, 150, 150)); 
+            }
+            g2d.fillRoundRect(x, y, width, height, 10, 10);
+            g2d.setColor(new Color(0, 255, 255)); 
+            g2d.setStroke(new BasicStroke(1));
+            g2d.drawRoundRect(x, y, width, height, 10, 10);
+            
+            g2d.setColor(system.IsValid() ? new Color(0, 200, 0) : new Color(255, 0, 0));
+            g2d.fillOval(x + width - 15, y + 5, 10, 10);
+            g2d.setColor(Color.WHITE);
+            g2d.drawOval(x + width - 15, y + 5, 10, 10);
+        }
+
+        
+        for (Hop system : model.getSystems()) {
+            for (Port port : system.ports) {
+                Point pos = port.getPosition();
+                Shape shape = port.getShape() == ShapeType.Square ?
+                        new Rectangle2D.Double(pos.x - 5, pos.y - 5, 10, 10) :
+                        new Polygon(new int[]{pos.x - 5, pos.x + 5, pos.x}, new int[]{pos.y - 5, pos.y - 5, pos.y + 5}, 3);
+                boolean isSelected = port == model.getSelectedPort();
+                boolean isHovered = port == hoveredPort;
+                
+                if (isSelected || isHovered) {
+                    g2d.setColor(new Color(0, 255, 255, 100));
+                    g2d.fill(new Ellipse2D.Double(pos.x - 10, pos.y - 10, 20, 20));
+                }
+                g2d.setColor(port.getType() == PortType.Input ? new Color(100, 100, 255) : new Color(255, 100, 100));
+                g2d.fill(shape);
+                g2d.setColor(Color.WHITE);
+                g2d.draw(shape);
+            }
+        }
+
+        
+        double tempWireLength = 0.0;
+        if (model.getSelectedPort() != null && mousePos != null) {
+            Point src = model.getSelectedPort().getPosition();
+            tempWireLength = calculateWireLength(src, mousePos);
+            g2d.setStroke(new BasicStroke(2, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, new float[]{5.0f}, 0.0f)); 
+            g2d.setColor(model.isTemporaryWireValid(mousePos) ? new Color(0, 0, 255) : new Color(255, 0, 0)); 
+            g2d.drawLine(src.x, src.y, mousePos.x, mousePos.y);
+        }
+
+        
+        g2d.setStroke(new BasicStroke(2));
+        for (Wire wire : model.getWires()) {
+            Point src = wire.getSource().getPosition();
+            Point dst = wire.getDestination().getPosition();
+            g2d.setColor(wire.IsValid() ? new Color(0, 200, 0) : new Color(255, 0, 0)); 
+            g2d.drawLine(src.x, src.y, dst.x, dst.y);
+            
+            if (System.currentTimeMillis() - wire.getCreationTime() < 500) {
+                g2d.setColor(new Color(255, 255, 0, 150));
+                g2d.fillOval(src.x - 5, src.y - 5, 10, 10);
+                g2d.fillOval(dst.x - 5, dst.y - 5, 10, 10);
+            }
+        }
+
+        
+        for (Pocket pocket : model.getPockets()) {
+            if (pocket.getState() == PocketState.InProgress && pocket.getCurrentWire() != null) {
+                Point src = pocket.getCurrentWire().getSource().getPosition();
+                Point dst = pocket.getCurrentWire().getDestination().getPosition();
+                double progress = pocket.getProgress();
+                int x = (int) (src.x + (dst.x - src.x) * progress);
+                int y = (int) (src.y + (dst.y - src.y) * progress);
+                Shape shape = pocket.getShapeType() == ShapeType.Square ?
+                        new Rectangle2D.Double(x - 7.5, y - 7.5, 15, 15) : 
+                        new Polygon(new int[]{x - 7, x + 7, x}, new int[]{y - 7, y - 7, y + 7}, 3); 
+                g2d.setColor(pocket.getShapeType() == ShapeType.Square ? new Color(0, 200, 200) : new Color(200, 0, 200));
+                g2d.fill(shape);
+                g2d.setColor(Color.WHITE);
+                g2d.draw(shape);
+                
+                g2d.setColor(Color.WHITE);
+                g2d.fillOval(x - 2, y - 2, 4, 4);
+            }
+        }
+
+        
+        int barX = 10, barY = 500, barWidth = 780, barHeight = 20;
+        g2d.setColor(new Color(50, 50, 50));
+        g2d.fillRoundRect(barX, barY, barWidth, barHeight, 5, 5);
+        g2d.setColor(Color.WHITE);
+        g2d.drawRoundRect(barX, barY, barWidth, barHeight, 5, 5);
+        int progressWidth = (int) (model.getTemporalProgress() / 100.0 * barWidth);
+        g2d.setColor(new Color(0, 200, 200));
+        g2d.fillRoundRect(barX, barY, progressWidth, barHeight, 5, 5);
+
+        
+        int wireBarY = 530;
+        g2d.setColor(new Color(50, 50, 50));
+        g2d.fillRoundRect(barX, wireBarY, barWidth, barHeight, 5, 5);
+        g2d.setColor(Color.WHITE);
+        g2d.drawRoundRect(barX, wireBarY, barWidth, barHeight, 5, 5);
+        double totalWireLength = model.getTotalWireLength() + tempWireLength;
+        double wireUsagePercentage = totalWireLength / model.getMaxWireLength();
+        int wireUsageWidth = (int) (wireUsagePercentage * barWidth);
+        
+        if (wireUsagePercentage < 0.5) {
+            g2d.setColor(new Color(0, 200, 0)); 
+        } else if (wireUsagePercentage <= 0.8) {
+            g2d.setColor(Color.YELLOW); 
+        } else {
+            g2d.setColor(new Color(255, 0, 0)); 
+        }
+        g2d.fillRoundRect(barX, wireBarY, wireUsageWidth, barHeight, 5, 5);
+
+        
+        g2d.setFont(new Font("Arial", Font.BOLD, 14));
+        g2d.setColor(new Color(0, 0, 0, 150));
+        g2d.fillRoundRect(600, 540, 190, 70, 10, 10); 
+        g2d.setColor(Color.WHITE);
+        g2d.drawRoundRect(600, 540, 190, 70, 10, 10);
+        g2d.setColor(new Color(0, 200, 200));
+        g2d.drawString("Coins: " + model.getCoins(), 610, 560);
+        g2d.drawString("Stage: " + (model.getStageDuration() == 60.0 ? 1 : 2), 710, 560);
+        
+        double lostPercentage = model.getTotalSent() > 0 ? (model.getLostPackets() / (double) model.getTotalSent()) * 100 : 0;
+        g2d.drawString("Lost: " + String.format("%.1f%%", lostPercentage), 610, 580);
+
+        
+        if (model.isLevelPassed() && !stageCompletePlayed) {
+            AudioManager.playStageCompleteSound();
+            stageCompletePlayed = true;
+            System.out.println("Level passed, stage complete sound played");
+        } else if (!model.isLevelPassed()) {
+            stageCompletePlayed = false;
+        }
     }
 
     public void setGameModel(GameModel model) {
         this.model = model;
+        stageCompletePlayed = false;
         repaint();
     }
 
-    public void setMousePos(Point mousePos) {
-        this.mousePos = mousePos;
+    public void setMousePos(Point point) {
+        this.mousePos = point;
+        hoveredPort = model.findPortAt(point);
         repaint();
+    }
+
+    public void notifyTimeJump(boolean isBackward) {
+        repaint(); 
+        System.out.println("Time jump triggered, isBackward=" + isBackward + ", Temporal Progress=" + model.getTemporalProgress());
     }
 
     public JButton getReturnToMenuButton() {
@@ -65,169 +303,7 @@ public class GameView extends JPanel {
         return storeButton;
     }
 
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Graphics2D g2d = (Graphics2D) g;
-        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-        
-        int wireBarX = 10;
-        int wireBarY = 10;
-        int wireBarWidth = 780;
-        int wireBarHeight = 20;
-        double totalEffectiveLength = model.getTotalWireLength();
-        if (model.getSelectedPort() != null) {
-            double tempLength = calculateWireLength(model.getSelectedPort().getPosition(), mousePos);
-            totalEffectiveLength += tempLength;
-        }
-        g2d.setColor(Color.BLACK);
-        g2d.drawRect(wireBarX, wireBarY, wireBarWidth, wireBarHeight);
-        double remainingWire = Math.max(0, model.getMaxWireLength() - totalEffectiveLength);
-        int wireFilledWidth = (int) (remainingWire / model.getMaxWireLength() * wireBarWidth);
-        g2d.setColor(model.getSelectedPort() != null && !model.isTemporaryWireValid(mousePos) ? Color.YELLOW : Color.GREEN);
-        g2d.fillRect(wireBarX + 1, wireBarY + 1, Math.max(0, wireFilledWidth - 1), wireBarHeight - 1);
-        g2d.setColor(Color.BLACK);
-        g2d.setFont(new Font("Arial", Font.PLAIN, 12));
-        g2d.drawString(String.format("Wire: %.0f/%.0f", remainingWire, model.getMaxWireLength()), wireBarX + 5, wireBarY - 5);
-
-        
-        int timeBarX = 10;
-        int timeBarY = 40;
-        int timeBarWidth = 780;
-        int timeBarHeight = 20;
-        g2d.setColor(Color.BLACK);
-        g2d.drawRect(timeBarX, timeBarY, timeBarWidth, timeBarHeight);
-        double timeProgress = model.getTemporalProgress() / 100.0;
-        int timeFilledWidth = (int) (timeProgress * timeBarWidth);
-        g2d.setColor(Color.CYAN);
-        g2d.fillRect(timeBarX + 1, timeBarY + 1, Math.max(0, timeFilledWidth - 1), timeBarHeight - 1);
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - lastJumpTime < 500) {
-            g2d.setColor(isBackwardJump ? new Color(255, 255, 0, 100) : new Color(255, 255, 255, 100));
-            g2d.fillRect(timeBarX + 1, timeBarY + 1, timeBarWidth - 1, timeBarHeight - 1);
-        }
-        g2d.setColor(Color.BLACK);
-        g2d.setFont(new Font("Arial", Font.PLAIN, 12));
-        g2d.drawString(String.format("Time: %.0f/%.0fs", model.getTemporalProgress() / 100.0 * model.getStageDuration(), model.getStageDuration()), timeBarX + 5, timeBarY - 5);
-
-        
-        int hudX = 10;
-        int hudY = 550;
-        int hudWidth = 200;
-        int hudHeight = 40;
-        g2d.setColor(new Color(0, 0, 0, 100));
-        g2d.fillRect(hudX, hudY, hudWidth, hudHeight);
-        g2d.setColor(Color.WHITE);
-        g2d.setFont(new Font("Arial", Font.PLAIN, 12));
-        g2d.drawString(String.format("Wire: %.0f/%.0f", remainingWire, model.getMaxWireLength()), hudX + 5, hudY + 12);
-        g2d.drawString(String.format("Time: %.0f%%", model.getTemporalProgress()), hudX + 5, hudY + 24);
-        double packetLoss = model.getTotalSent() > 0 ? (model.getLostPackets() / (double) model.getTotalSent()) * 100.0 : 0.0;
-        g2d.drawString(String.format("Loss: %.0f%%", packetLoss), hudX + 100, hudY + 12);
-        g2d.drawString(String.format("Coins: %d", model.getCoins()), hudX + 100, hudY + 24);
-
-        for (int i = 0; i < model.getSystems().size(); i++) {
-            Hop system = model.getSystems().get(i);
-            g2d.setColor(Color.LIGHT_GRAY);
-            g2d.fillRect(system.getX(), system.getY(), system.getWidth(), system.getHeight());
-            g2d.setColor(Color.BLACK);
-            g2d.drawRect(system.getX(), system.getY(), system.getWidth(), system.getHeight());
-
-            if (i == 0) {
-                g2d.setColor(Color.BLACK);
-                g2d.setFont(new Font("Arial", Font.BOLD, 12));
-                g2d.drawString("S", system.getX() + 5, system.getY() + 15);
-            }
-
-            int ledX = system.getX() + system.getWidth() / 2 - 5;
-            int ledY = system.getY() + 5;
-            if (system.IsValid()) {
-                g2d.setColor(Color.BLUE);
-            } else {
-                g2d.setColor(new Color(128, 128, 128, 100));
-            }
-            g2d.fillOval(ledX, ledY, 10, 10);
-            g2d.setColor(Color.DARK_GRAY);
-            g2d.drawOval(ledX, ledY, 10, 10);
-
-            for (Port port : system.ports) {
-                g2d.setColor(port == model.getSelectedPort() ? Color.RED : (port.getShape() == ShapeType.Square ? Color.BLUE : Color.MAGENTA));
-                if (port.getShape() == ShapeType.Square) {
-                    g2d.fillRect(port.getX() - 5, port.getY() - 5, 10, 10);
-                } else {
-                    g2d.fillPolygon(new int[]{port.getX(), port.getX() - 5, port.getX() + 5},
-                            new int[]{port.getY() - 5, port.getY() + 5, port.getY() + 5}, 3);
-                }
-            }
-        }
-
-        for (Wire wire : model.getWires()) {
-            Point src = wire.getSource().getPosition();
-            Point dest = wire.getDestination().getPosition();
-            if (wire.IsValid())
-                g2d.setColor(Color.BLACK);
-            else
-                g2d.setColor(Color.RED);
-            g2d.drawLine(src.x, src.y, dest.x, dest.y);
-        }
-
-        for (Pocket pocket : model.getPockets()) {
-            if (pocket.getState() == PocketState.Lost || pocket.getCurrentWire() == null) continue;
-            Point src = pocket.getCurrentWire().getSource().getPosition();
-            Point dest = pocket.getCurrentWire().getDestination().getPosition();
-            Point center = pocket.getCenterOfMass(src, dest);
-            if (center == null) continue;
-
-            Shape shape = pocket.getShape(center);
-            g2d.setColor(pocket.getShapeType() == ShapeType.Square ? Color.GREEN : Color.YELLOW);
-            g2d.fill(shape);
-
-            g2d.setColor(Color.BLACK);
-            g2d.fillOval(center.x - 1, center.y - 1, 2, 2);
-        }
-
-        if (model.getSelectedPort() != null) {
-            g2d.setColor(model.isTemporaryWireValid(mousePos) ? Color.BLUE : Color.RED);
-            g2d.drawLine(model.getSelectedPort().getX(), model.getSelectedPort().getY(), mousePos.x, mousePos.y);
-        }
-
-        if (model.isGameOver()) {
-            g2d.setColor(new Color(0, 0, 0, 150));
-            g2d.fillRect(250, 200, 300, 200);
-            g2d.setColor(Color.WHITE);
-            g2d.setFont(new Font("Arial", Font.BOLD, 24));
-            g2d.drawString("Game Over", 350, 250);
-            g2d.setFont(new Font("Arial", Font.PLAIN, 16));
-            g2d.drawString("Healthy Packets: " + (model.getTotalSent() - model.getLostPackets()), 300, 300);
-            g2d.drawString("Packet Loss: " + String.format("%.0f%%", packetLoss), 300, 320);
-            returnToMenuButton.setVisible(true);
-        } else if (model.isLevelPassed()) {
-            g2d.setColor(new Color(0, 0, 0, 150));
-            g2d.fillRect(250, 200, 300, 200);
-            g2d.setColor(Color.WHITE);
-            g2d.setFont(new Font("Arial", Font.BOLD, 24));
-            g2d.drawString("Level Passed!", 350, 250);
-            g2d.setFont(new Font("Arial", Font.PLAIN, 16));
-            g2d.drawString("All Packets Returned", 300, 300);
-            nextStageButton.setVisible(true);
-            returnToMenuButton.setVisible(true);
-        } else {
-            returnToMenuButton.setVisible(false);
-            nextStageButton.setVisible(false);
-        }
-    }
-
-    private double calculateWireLength(Point p1, Point p2) {
-        return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
-    }
-
-    public double getStageDuration() {
-        return model.getStageDuration();
-    }
-
-    public void notifyTimeJump(boolean isBackward) {
-        lastJumpTime = System.currentTimeMillis();
-        isBackwardJump = isBackward;
-        repaint();
+    public JButton getPlayButton() {
+        return playButton;
     }
 }

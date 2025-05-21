@@ -189,14 +189,19 @@ public class GameModel implements ValidDevice {
                     Point c1 = p1.getCenterOfMass(p1.getCurrentWire().getSource().getPosition(), p1.getCurrentWire().getDestination().getPosition());
                     Point c2 = p2.getCenterOfMass(p2.getCurrentWire().getSource().getPosition(), p2.getCurrentWire().getDestination().getPosition());
                     if (c1 != null && c2 != null && p1.getShape(c1).intersects(p2.getShape(c2).getBounds2D())) {
-                        safe = false;
                         if (p1.getLastHit() == p2) {
+                            System.out.println("I'm here");
                             continue;
                         }
-                        if (p1.gotHit(p2))
+                        safe = false;
+                        if (p1.gotHit(p2)){
                             pocketsToRemove.add(p1);
-                        if (p2.gotHit(p1))
+                            System.out.println("died");
+                        }
+                        if (p2.gotHit(p1)) {
                             pocketsToRemove.add(p2);
+                            System.out.println("died");
+                        }
                         Point collisionPoint = new Point((c1.x + c2.x) / 2, (c1.y + c2.y) / 2);
                         if (!isOAtarActive) {
                             for (Pocket nearby : pockets) {
@@ -450,7 +455,7 @@ public class GameModel implements ValidDevice {
 
     public boolean isTimeBarClicked(Point point, double[] targetTime) {
         int barX = 10;
-        int barY = 40;
+        int barY = 500;
         int barWidth = 780;
         int barHeight = 20;
         if (point.x >= barX && point.x <= barX + barWidth && point.y >= barY && point.y <= barY + barHeight) {
@@ -530,9 +535,9 @@ public class GameModel implements ValidDevice {
     }
 
     public boolean IsValid() {
-        for (Hop hop : systems)
-            if (!hop.IsValid())
-                return false;
+//
+//
+//
         return true;
     }
 }

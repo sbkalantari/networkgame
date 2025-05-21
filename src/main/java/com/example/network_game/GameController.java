@@ -40,9 +40,14 @@ public class GameController {
                 if (SwingUtilities.isLeftMouseButton(e)) {
                     double[] targetTime = new double[1];
                     if (model.isTimeBarClicked(e.getPoint(), targetTime)) {
-                        boolean isBackward = targetTime[0] < model.getTemporalProgress() / 100.0 * model.getStageDuration();
-                        model.jumpToTime(targetTime[0]);
-                        view.notifyTimeJump(isBackward);
+                        double currentProgressTime = model.getTemporalProgress() / 100.0 * model.getStageDuration();
+                        boolean isBackward = targetTime[0] < currentProgressTime;
+                        if (!model.isGameOver() && !model.isLevelPassed()) {
+                            model.jumpToTime(targetTime[0]);
+                            view.notifyTimeJump(isBackward);
+                        } else {
+                            System.out.println("Time jump ignored: Game is over or level passed");
+                        }
                     } else {
                         handleLeftClick(e.getPoint());
                     }
@@ -55,7 +60,7 @@ public class GameController {
         view.addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
-                view.setMousePos(e.getPoint());
+                view.setMousePos(e.getPoint()); 
             }
         });
 
@@ -81,20 +86,18 @@ public class GameController {
             pauseGame();
             cardLayout.show(cardPanel, "Store");
         });
-    }
 
-    private void setupPlayButton() {
-        JButton playButton = new JButton("Play");
-        playButton.setBounds(10, 70, 80, 30);
-        playButton.setFont(new Font("Arial", Font.PLAIN, 12));
-        playButton.addActionListener(e -> {
+        view.getPlayButton().addActionListener(e -> {
             if (model.IsValid()) {
                 model.startPlaying();
                 animationTimer.start();
                 view.repaint();
             }
         });
-        view.add(playButton);
+    }
+
+    private void setupPlayButton() {
+        
     }
 
     private void setupAnimationTimer() {

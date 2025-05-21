@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.net.URL;
 
 public class AudioManager {
-    private static float masterVolume = 0.25f;
+    private static float masterVolume = 0.1f;
     private static Clip backgroundClip;
     private static final String BACKGROUND_PATH = "/sound/background.wav";
     private static final String CONNECT_PATH = "/sound/connect.wav";
