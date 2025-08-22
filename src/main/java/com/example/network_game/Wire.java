@@ -8,8 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-// TODO fix dynamic length wire bar problem with curve wires
-// TODO check the impact and hit of two pocket in curve wires are calculated correctly
 public class Wire implements ValidDevice {
     private Port source;
     private Port destination;

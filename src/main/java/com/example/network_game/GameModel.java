@@ -349,6 +349,14 @@ public class GameModel implements ValidDevice {
         if (oAiryamanTimer != null) oAiryamanTimer.stop();
     }
 
+    public void addCoins(int amount) {
+        coins += amount;
+    }
+
+    public void updateTotalWireLength(double difference) {
+        totalWireLength += difference;
+    }
+
     private Port chooseOutputPort(Pocket pocket) {
         Hop hop = pocket.getCurrentHop();
         List<Port> compatiblePorts = new ArrayList<>();
