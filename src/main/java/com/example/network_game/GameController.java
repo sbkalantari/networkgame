@@ -86,11 +86,11 @@ public class GameController {
             @Override
             public void mouseDragged(MouseEvent e) {
                 if (selectedCurve != null && selectedWireForCurveDrag != null) {
-                    // Store original position and length
+                    
                     Point originalPos = selectedCurve.getPosition();
                     double originalLength = selectedWireForCurveDrag.getLength();
 
-                    // Try new position
+                    
                     selectedCurve.setPosition(e.getPoint());
                     selectedWireForCurveDrag.updatePathPoints();
                     selectedWireForCurveDrag.updateLength();
@@ -98,15 +98,15 @@ public class GameController {
                     double newLength = selectedWireForCurveDrag.getLength();
                     double lengthDifference = newLength - originalLength;
 
-                    // Check if total wire length would exceed limit
+                    
                     if (model.getTotalWireLength() + lengthDifference > model.getMaxWireLength()) {
-                        // Revert to original position
+                        
                         selectedCurve.setPosition(originalPos);
                         selectedWireForCurveDrag.updatePathPoints();
                         selectedWireForCurveDrag.updateLength();
                         System.out.println("Wire length limit exceeded, curve movement reverted.");
                     } else {
-                        // Update total wire length
+                        
                         model.updateTotalWireLength(lengthDifference);
                     }
 
@@ -206,21 +206,21 @@ public class GameController {
         if (wireForCurve != null && wireForCurve.canAddCurve()) {
             if (model.spendCoins(1)) {
                 List<Point> tempPathPoints = new ArrayList<>(wireForCurve.getPathPoints());
-                tempPathPoints.add(tempPathPoints.size() - 1, clickPoint); // Insert before destination
+                tempPathPoints.add(tempPathPoints.size() - 1, clickPoint); 
 
                 double newWireLength = WireValidator.calculateCurvedWireLength(tempPathPoints);
                 double lengthDifference = newWireLength - wireForCurve.getLength();
 
-                // Check if total wire length would exceed limit
+                
                 if (model.getTotalWireLength() + lengthDifference <= model.getMaxWireLength()) {
                     wireForCurve.addCurve(clickPoint, 20.0);
-                    // Update total wire length in model
+                    
                     model.updateTotalWireLength(lengthDifference);
                     AudioManager.playConnectSound();
                     System.out.println("Wire curve added for 1 coin");
                     view.repaint();
                 } else {
-                    // Refund the coin since we couldn't add the curve
+                    
                     model.addCoins(1);
                     System.out.println("Wire length limit exceeded, can't add curve.");
                 }

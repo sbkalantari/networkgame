@@ -52,13 +52,17 @@ public class GameModel implements ValidDevice {
     }
 
     private void initializeSystems(int[][] systemPositions) {
-        for (int[] pos : systemPositions) {
-            systems.add(createSystem(pos[0], pos[1], 2, 2));
+        SystemType[] types = {SystemType.NORMAL, SystemType.SPY, SystemType.VPN, SystemType.SABOTAGE};
+
+        for (int i = 0; i < systemPositions.length; i++) {
+            int[] pos = systemPositions[i];
+            SystemType type = i < types.length ? types[i] : SystemType.NORMAL;
+            systems.add(createSystem(pos[0], pos[1], 2, 2, type));
         }
     }
 
-    private Hop createSystem(int x, int y, int inputPorts, int outputPorts) {
-        Hop system = new Hop();
+    private Hop createSystem(int x, int y, int inputPorts, int outputPorts, SystemType type) {
+        Hop system = new Hop(type);
         int systemWidth = 100;
         int systemHeight = 80;
         int offset = 10;
@@ -73,7 +77,7 @@ public class GameModel implements ValidDevice {
             port.setHopConnected(system);
             int portY = inputPorts == 1 ? y + systemHeight / 2 : y + offset + (int)(i * inputStep);
             port.setPosition(x, portY);
-            system.ports.add(port);
+            system.getPorts().add(port);
         }
 
         for (int i = 0; i < outputPorts; i++) {
@@ -83,7 +87,7 @@ public class GameModel implements ValidDevice {
             port.setHopConnected(system);
             int portY = outputPorts == 1 ? y + systemHeight / 2 : y + offset + (int)(i * outputStep);
             port.setPosition(x + systemWidth, portY);
-            system.ports.add(port);
+            system.getPorts().add(port);
         }
 
         system.setPosition(x, y);
@@ -263,7 +267,7 @@ public class GameModel implements ValidDevice {
                 if (pocket.getProgress() >= 1) {
                     Port destPort = pocket.getCurrentWire().getDestination();
                     Hop destHop = destPort.getHopConnected();
-                    if (destHop.ports.size() <= 5) {
+                    if (destHop.getPorts().size() <= 5) {
                         pocket.setCurrentHop(destHop);
                         pocket.setCurrentWire(null);
                         coins += pocket.getCoinReward();
@@ -359,17 +363,45 @@ public class GameModel implements ValidDevice {
 
     private Port chooseOutputPort(Pocket pocket) {
         Hop hop = pocket.getCurrentHop();
-        List<Port> compatiblePorts = new ArrayList<>();
-        for (Port port : hop.ports) {
-            if (port.getType() == PortType.Output && port.getWire() != null && port.getWire().IsValid()) {
-                if (port.getShape() == pocket.getShapeType()) {
-                    compatiblePorts.add(port);
+
+        
+        Pocket processedPacket = hop.processPacket(pocket, systems);
+
+        
+        if (pocket.isRouteToIncompatible()) {
+            List<Port> incompatiblePorts = new ArrayList<>();
+            for (Port port : hop.getPorts()) {
+                if (port.getType() == PortType.Output && port.getWire() != null
+                        && port.getWire().IsValid() && port.getShape() != pocket.getShapeType()) {
+                    incompatiblePorts.add(port);
                 }
+            }
+            if (!incompatiblePorts.isEmpty()) {
+                for (Port port : incompatiblePorts) {
+                    if (isPortEmpty(port)) {
+                        pocket.setRouteToIncompatible(false);  
+                        return port;
+                    }
+                }
+            }
+            
+            pocket.setRouteToIncompatible(false);
+        }
+
+        
+        List<Port> compatiblePorts = new ArrayList<>();
+        for (Port port : hop.getPorts()) {
+            if (port.getType() == PortType.Output && port.getWire() != null
+                    && port.getWire().IsValid() && port.getShape() == pocket.getShapeType()) {
+                compatiblePorts.add(port);
             }
         }
         for (Port port : compatiblePorts) {
-            if (isPortEmpty(port)) return port;
+            if (isPortEmpty(port)) {
+                return port;
+            }
         }
+
         return null;
     }
 
@@ -382,7 +414,7 @@ public class GameModel implements ValidDevice {
 
     public Port findPortAt(Point point) {
         for (Hop system : systems) {
-            for (Port port : system.ports) {
+            for (Port port : system.getPorts()) {
                 if (port.contains(point)) {
                     return port;
                 }

@@ -7,7 +7,7 @@ public class Pocket {
     private ShapeType shape;
     private double size;
     private double speed;
-    private double currentSpeed = 0; // Current actual speed
+    private double currentSpeed = 0; 
     private int coinReward;
     private Hop currentHop;
     private Wire currentWire;
@@ -16,12 +16,14 @@ public class Pocket {
     private Point shapeOffset;
     private int health;
     private Pocket lastHit;
-    private PacketType packetType = PacketType.MESSAGE;
+    private PacketType packetType = PacketType.MESSENGER;
     private int noiseLevel = 0;
     private Hop vpnSource = null;
+    private boolean routeToIncompatible = false;
 
-    private static final double SPEED_DAMAGE_THRESHOLD = 300.0; // Speed threshold for system damage
-    private static final double ACCELERATION_WIRE_LENGTH_THRESHOLD = 200.0; // Wire length for acceleration
+
+    private static final double SPEED_DAMAGE_THRESHOLD = 300.0; 
+    private static final double ACCELERATION_WIRE_LENGTH_THRESHOLD = 200.0; 
 
     public Pocket() {
         this.progress = 0;
@@ -52,67 +54,78 @@ public class Pocket {
         Port destPort = currentWire.getDestination();
         double effectiveSpeed = speed;
 
-        // Apply speed modifications based on destination port compatibility
+        
         if (destPort.getShape() != shape) {
             if (shape == ShapeType.Square) {
-                effectiveSpeed *= 0.5; // Slower for incompatible
+                effectiveSpeed *= 0.5; 
             } else {
-                effectiveSpeed *= 1.5; // Faster for incompatible
+                effectiveSpeed *= 1.5; 
             }
         }
 
-        // Apply packet type specific speed modifications
+        
         switch (packetType) {
             case CONFIDENTIAL:
-                // Slow down if destination system has other packets
+                
                 if (hasOtherPacketsInDestination()) {
                     effectiveSpeed *= 0.7;
                 }
                 break;
             case PROTECTED:
-                // Random speed behavior
-                effectiveSpeed *= (0.8 + Math.random() * 0.4); // 0.8 to 1.2x
+                
+                effectiveSpeed *= (0.8 + Math.random() * 0.4); 
                 break;
             case TROJAN:
-                // Unpredictable behavior
-                effectiveSpeed *= (0.5 + Math.random() * 1.0); // 0.5 to 1.5x
+                
+                effectiveSpeed *= (0.5 + Math.random() * 1.0); 
                 break;
         }
 
         double wireLength = currentWire.getLength();
 
-        // Implement acceleration on long wires
+        
         if (wireLength > ACCELERATION_WIRE_LENGTH_THRESHOLD) {
             double accelerationFactor = 1.0 + (wireLength - ACCELERATION_WIRE_LENGTH_THRESHOLD) / 1000.0;
             effectiveSpeed *= accelerationFactor;
         }
 
-        // Store current speed for damage calculation
+        
         currentSpeed = effectiveSpeed;
 
         progress += (effectiveSpeed * deltaTime) / wireLength;
         if (progress > 1) progress = 1;
     }
 
-    // Check if this packet will damage the destination system
+    
     public boolean willDamageSystem() {
         return currentSpeed > SPEED_DAMAGE_THRESHOLD;
     }
 
-    // Apply damage to destination system
-    public void damageDestinationSystem() {
-        if (currentWire != null && willDamageSystem()) {
-            Hop destSystem = currentWire.getDestination().getHopConnected();
-            destSystem.deactivateTemporarily();
-        }
+    
+
+
+
+
+
+
+
+    public boolean isRouteToIncompatible() {
+        return routeToIncompatible;
     }
 
+    public void setRouteToIncompatible(boolean routeToIncompatible) {
+        this.routeToIncompatible = routeToIncompatible;
+    }
+
+    public void setProtectedByVPN(Hop vpnSource) {
+        this.vpnSource = vpnSource;
+    }
     private boolean hasOtherPacketsInDestination() {
-        // Simplified check - in real implementation would check destination system
+        
         return false;
     }
 
-    // New methods for packet type management
+    
     public PacketType getPacketType() { return packetType; }
     public void setPacketType(PacketType packetType) { this.packetType = packetType; }
     public int getNoiseLevel() { return noiseLevel; }
@@ -121,7 +134,7 @@ public class Pocket {
     public void setVpnSource(Hop vpnSource) { this.vpnSource = vpnSource; }
     public double getCurrentSpeed() { return currentSpeed; }
 
-    // Existing methods remain the same
+    
     public boolean gotHit(Pocket pocket) {
         System.out.println("got hit");
         this.health--;
