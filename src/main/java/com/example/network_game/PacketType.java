@@ -1,40 +1,64 @@
 package com.example.network_game;
 
 public enum PacketType {
-    MESSENGER("Messenger", "Standard communication packet"),
-    CONFIDENTIAL("Confidential", "Secure packet destroyed by spy systems"),
-    TROJAN("Trojan", "Malicious packet created by sabotage systems"),
-    PROTECTED("Protected", "VPN-protected packet immune to interference"),
-    LARGE("Large", "Large packet requiring splitting/merging");
+    MESSENGER(1, 1),
+    CONFIDENTIAL(1, 1),
+    TROJAN( 1, 1),
+    PROTECTED(2, 5),
 
-    private final String displayName;
-    private final String description;
+    
+    TEXT_INCOMPATIBLE(2, 2),
+    VIDEO_ACCELERATING(3, 3),
+    AUDIO_DECELERATING( 1, 1),
 
-    PacketType(String displayName, String description) {
-        this.displayName = displayName;
-        this.description = description;
+    
+    LARGE_SMALL(4, 3),
+    LARGE_MEDIUM(6, 4),
+    LARGE_BIG(8, 8),
+    LARGE_HUGE(10, 10);
+
+    private final int size;
+    private final int coinReward;
+
+    PacketType(int size, int coinReward) {
+        this.size = size;
+        this.coinReward = coinReward;
     }
 
-    public String getDisplayName() { return displayName; }
-    public String getDescription() { return description; }
+    public int getSize() { return size; }
+    public int getCoinReward() { return coinReward; }
 
-    /**
-     * Get color for packet type visualization
-     */
+    public boolean isLargePacket() {
+        return this == LARGE_SMALL || this == LARGE_MEDIUM || this == LARGE_BIG || this == LARGE_HUGE;
+    }
+
+    public boolean isMessengerType() {
+        return this == MESSENGER || this == TEXT_INCOMPATIBLE || this == VIDEO_ACCELERATING || this == AUDIO_DECELERATING;
+    }
+
     public java.awt.Color getColor() {
         switch (this) {
             case MESSENGER:
-                return new java.awt.Color(100, 200, 255); 
+                return new java.awt.Color(100, 200, 255);
             case CONFIDENTIAL:
-                return new java.awt.Color(255, 100, 100); 
+                return new java.awt.Color(255, 100, 100);
             case TROJAN:
-                return new java.awt.Color(150, 50, 150);  
+                return new java.awt.Color(150, 50, 150);
             case PROTECTED:
-                return new java.awt.Color(100, 255, 100); 
-            case LARGE:
-                return new java.awt.Color(255, 200, 100); 
+                return new java.awt.Color(100, 255, 100);
+            case TEXT_INCOMPATIBLE:
+                return new java.awt.Color(255, 255, 100);
+            case VIDEO_ACCELERATING:
+                return new java.awt.Color(255, 150, 50);
+            case AUDIO_DECELERATING:
+                return new java.awt.Color(150, 255, 150);
+            case LARGE_SMALL:
+            case LARGE_MEDIUM:
+            case LARGE_BIG:
+            case LARGE_HUGE:
+                return new java.awt.Color(255, 200, 100);
             default:
-                return new java.awt.Color(200, 200, 200); 
+                return new java.awt.Color(200, 200, 200);
         }
     }
 }

@@ -2,7 +2,9 @@ package com.example.network_game;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.swing.Timer;
 
 public class GameModel implements ValidDevice {
@@ -25,6 +27,11 @@ public class GameModel implements ValidDevice {
     private boolean isOAiryamanActive;
     private Timer oAtarTimer;
     private Timer oAiryamanTimer;
+
+    private static final int AERGIA_DURATION_MS = 20000; 
+    private static final int ELIPHAS_DURATION_MS = 30000;
+    private Map<Wire, List<AccelerationFreeze>> accelerationFreezes = new HashMap<>();
+    private Map<Wire, List<CenterResetEffect>> centerResetEffects = new HashMap<>();
 
     public GameModel() {
         this(new int[][]{{100, 100}, {500, 100}, {100, 400}, {500, 400}}, 60.0, 3000.0);
@@ -263,7 +270,7 @@ public class GameModel implements ValidDevice {
                     }
                 }
             } else if (pocket.getCurrentWire() != null) {
-                pocket.updateProgress(deltaTime);
+                pocket.updateProgress(this, deltaTime);
                 if (pocket.getProgress() >= 1) {
                     Port destPort = pocket.getCurrentWire().getDestination();
                     Hop destHop = destPort.getHopConnected();
@@ -477,6 +484,41 @@ public class GameModel implements ValidDevice {
         totalWireLength += wireLength;
         return wire;
     }
+
+    public void activateScrollAergia(Wire wire, Point point) {
+        long expiry = System.currentTimeMillis() + AERGIA_DURATION_MS;
+        accelerationFreezes.putIfAbsent(wire, new ArrayList<>());
+        accelerationFreezes.get(wire).add(new AccelerationFreeze(point, expiry));
+        System.out.println("Scroll of Aergia activated on wire at point: " + point);
+    }
+
+    public void activateScrollEliphas(Wire wire, Point point) {
+        long expiry = System.currentTimeMillis() + ELIPHAS_DURATION_MS;
+        centerResetEffects.putIfAbsent(wire, new ArrayList<>());
+        centerResetEffects.get(wire).add(new CenterResetEffect(point, expiry));
+        System.out.println("Scroll of Eliphas activated on wire at point: " + point);
+    }
+
+    public boolean isAccelerationFrozen(Wire wire, Point position) {
+        if (wire == null || position == null) return false;
+
+        List<AccelerationFreeze> freezes = accelerationFreezes.get(wire);
+        if (freezes == null || freezes.isEmpty()) return false;
+
+        long now = System.currentTimeMillis();
+        for (AccelerationFreeze freeze : freezes) {
+            if (freeze.expiryTime < now) continue; 
+            final int freezeRadius = 50;
+            double distSq = (freeze.point.x - position.x) * (freeze.point.x - position.x)
+                    + (freeze.point.y - position.y) * (freeze.point.y - position.y);
+            if (distSq <= freezeRadius * freezeRadius) {
+                return true; 
+            }
+        }
+
+        return false;
+    }
+
 
     public void removeWire(Wire wire) {
         if (wire != null) {

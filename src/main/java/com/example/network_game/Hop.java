@@ -8,20 +8,18 @@ import java.util.List;
 import java.util.Random;
 
 public class Hop implements ValidDevice {
-
     private ArrayList<Port> ports = new ArrayList<>();
     private Queue<Pocket> pockets = new LinkedList<>();
     private int x, y, width, height;
-
     private SystemType systemType;
     private boolean active;
     private long lastActivity;
-    private double detectionRadius; 
-
+    private double detectionRadius;
     private Random random = new Random();
-
     private long deactivationTimer = 0;
-    private static final long ANTI_TROJAN_COOLDOWN = 5000; 
+    private int packetsProcessed = 0;
+    private static final long ANTI_TROJAN_COOLDOWN = 5000;
+    private static final long SYSTEM_DAMAGE_DURATION = 3000;
 
     public Hop() {
         this.systemType = SystemType.NORMAL;
@@ -35,19 +33,28 @@ public class Hop implements ValidDevice {
         this.systemType = type;
     }
 
+    public void deactivateTemporarily() {
+        this.active = false;
+        this.deactivationTimer = System.currentTimeMillis();
+    }
+
     public Pocket processPacket(Pocket packet, List<Hop> allSystems) {
         
-        if (!active) {
-            if (deactivationTimer > 0 && System.currentTimeMillis() - deactivationTimer > ANTI_TROJAN_COOLDOWN) {
-                active = true; 
+        if (!active && deactivationTimer > 0) {
+            long timePassed = System.currentTimeMillis() - deactivationTimer;
+            if ((systemType == SystemType.ANTI_TROJAN && timePassed > ANTI_TROJAN_COOLDOWN) ||
+                    (systemType != SystemType.ANTI_TROJAN && timePassed > SYSTEM_DAMAGE_DURATION)) {
+                active = true;
                 deactivationTimer = 0;
             } else {
-                
-                return packet;
+                return packet; 
             }
         }
 
+        if (!active) return packet;
+
         lastActivity = System.currentTimeMillis();
+        packetsProcessed++;
 
         switch (systemType) {
             case SPY:
@@ -58,42 +65,48 @@ public class Hop implements ValidDevice {
                 return processVPNSystem(packet);
             case ANTI_TROJAN:
                 return processAntiTrojanSystem(packet, allSystems);
-            case NORMAL:
             case DISTRIBUTE:
+                return processDistributeSystem(packet);
             case MERGE:
+                return processMergeSystem(packet);
+            case NORMAL:
             default:
                 return processNormalSystem(packet);
         }
     }
 
-    
     private Pocket processSpySystem(Pocket packet, List<Hop> allSystems) {
+        
         if (packet.getPacketType() == PacketType.CONFIDENTIAL) {
             packet.setState(PocketState.Lost);
             return packet;
         }
+
+        
         if (packet.getPacketType() == PacketType.PROTECTED) {
-            
             return packet;
         }
+
         
-        List<Hop> spySystems = new ArrayList<>();
+        List<Hop> activeSpy = new ArrayList<>();
         for (Hop system : allSystems) {
             if (system.getSystemType() == SystemType.SPY && system != this && system.isActive()) {
-                spySystems.add(system);
+                activeSpy.add(system);
             }
         }
-        if (!spySystems.isEmpty()) {
-            Hop targetSpy = spySystems.get(random.nextInt(spySystems.size()));
+
+        if (!activeSpy.isEmpty() && random.nextDouble() < 0.3) {
+            Hop targetSpy = activeSpy.get(random.nextInt(activeSpy.size()));
             packet.setCurrentHop(targetSpy);
         }
+
         return packet;
     }
 
-    
     private Pocket processSabotageSystem(Pocket packet) {
+        
         if (packet.getPacketType() == PacketType.PROTECTED) {
-            return packet; 
+            return packet;
         }
 
         
@@ -104,66 +117,125 @@ public class Hop implements ValidDevice {
         
         if (random.nextDouble() < 0.3) {
             packet.setPacketType(PacketType.TROJAN);
-            packet.setRouteToIncompatible(true); 
+        }
+
+        
+        packet.setRouteToIncompatible(true);
+
+        return packet;
+    }
+
+    private Pocket processVPNSystem(Pocket packet) {
+        
+        if (packet.getPacketType().isMessengerType()) {
+            packet.setPacketType(PacketType.PROTECTED);
+            packet.setProtectedByVPN(this);
         }
         return packet;
     }
 
-    
-    private Pocket processVPNSystem(Pocket packet) {
-        packet.setPacketType(PacketType.PROTECTED);
-        packet.setProtectedByVPN(this);
-        return packet;
-    }
-
-    
     private Pocket processAntiTrojanSystem(Pocket packet, List<Hop> allSystems) {
+        
         Point center = new Point(x + width / 2, y + height / 2);
-        if (packet.getPacketType() == PacketType.TROJAN) {
+
+        for (Hop system : allSystems) {
             double distance = Math.sqrt(
-                    Math.pow(packet.getCurrentHop().getX() - center.x, 2) +
-                            Math.pow(packet.getCurrentHop().getY() - center.y, 2));
+                    Math.pow(system.getX() + system.getWidth()/2 - center.x, 2) +
+                            Math.pow(system.getY() + system.getHeight()/2 - center.y, 2));
+
             if (distance <= detectionRadius) {
-                packet.setPacketType(PacketType.MESSENGER);
-                active = false;
-                deactivationTimer = System.currentTimeMillis();
-                return packet;
+                for (Pocket p : system.getPockets()) {
+                    if (p.getPacketType() == PacketType.TROJAN) {
+                        p.setPacketType(PacketType.MESSENGER);
+
+                        
+                        active = false;
+                        deactivationTimer = System.currentTimeMillis();
+                        break;
+                    }
+                }
             }
         }
+
         return packet;
     }
 
-    
+    private Pocket processDistributeSystem(Pocket packet) {
+        
+        if (packet.getPacketType().isLargePacket()) {
+            int packetSize = packet.getPacketType().getSize();
+
+            
+            List<Pocket> bitPackets = new ArrayList<>();
+            for (int i = 0; i < packetSize; i++) {
+                Pocket bitPacket = new Pocket();
+                bitPacket.setPacketType(PacketType.MESSENGER);
+                bitPacket.setShape(ShapeType.Square); 
+                bitPackets.add(bitPacket);
+            }
+
+            
+            
+            packet.setPacketType(PacketType.MESSENGER);
+            packet.setShape(ShapeType.Square);
+        }
+
+        return packet;
+    }
+
+    private Pocket processMergeSystem(Pocket packet) {
+        
+        
+        
+        return packet;
+    }
+
     private Pocket processNormalSystem(Pocket packet) {
+        
+        if (packet.getPacketType().isLargePacket()) {
+            pockets.clear();
+        }
+
+        
+        if (packet.getPacketType().isLargePacket() && random.nextDouble() < 0.5) {
+            for (Port port : ports) {
+                if (random.nextDouble() < 0.3) {
+                    port.setShape(port.getShape() == ShapeType.Square ?
+                            ShapeType.Triangle : ShapeType.Square);
+                }
+            }
+        }
+
         return packet;
     }
 
-    
     public Color getSystemColor() {
         if (!active) {
             return Color.DARK_GRAY;
         }
+
         switch (systemType) {
             case SPY:
-                return new Color(255, 100, 255); 
+                return new Color(255, 100, 255);
             case SABOTAGE:
-                return new Color(255, 50, 50); 
+                return new Color(255, 50, 50);
             case VPN:
-                return new Color(50, 255, 50); 
+                return new Color(50, 255, 50);
             case ANTI_TROJAN:
-                return new Color(255, 255, 50); 
+                return new Color(255, 255, 50);
             case DISTRIBUTE:
-                return new Color(100, 100, 255); 
+                return new Color(100, 100, 255);
             case MERGE:
-                return new Color(255, 165, 0); 
+                return new Color(255, 165, 0);
             case NORMAL:
             default:
-                return new Color(0, 150, 150); 
+                return new Color(0, 150, 150);
         }
     }
 
     @Override
     public boolean IsValid() {
+        
         for (Port p : ports) {
             if (!p.IsValid()) return false;
         }
@@ -171,8 +243,71 @@ public class Hop implements ValidDevice {
     }
 
     
+    public boolean canMoveTo(int newX, int newY, List<Wire> allWires, List<Hop> allSystems) {
+        
+        Rectangle newBounds = new Rectangle(newX, newY, width, height);
 
-    public void setPosition(int x, int y) { this.x = x; this.y = y;}
+        
+        for (Hop system : allSystems) {
+            if (system != this) {
+                Rectangle otherBounds = new Rectangle(system.getX(), system.getY(),
+                        system.getWidth(), system.getHeight());
+                if (newBounds.intersects(otherBounds)) {
+                    return false;
+                }
+            }
+        }
+
+        
+        double totalLengthChange = 0;
+        for (Port port : ports) {
+            if (port.getWire() != null) {
+                Wire wire = port.getWire();
+                Point currentPos = port.getPosition();
+                Point newPos = new Point(
+                        newX + (currentPos.x - x),
+                        newY + (currentPos.y - y)
+                );
+
+                Point otherEnd = port.getType() == PortType.Input ?
+                        wire.getSource().getPosition() : wire.getDestination().getPosition();
+
+                double currentLength = Math.sqrt(
+                        Math.pow(currentPos.x - otherEnd.x, 2) +
+                                Math.pow(currentPos.y - otherEnd.y, 2));
+                double newLength = Math.sqrt(
+                        Math.pow(newPos.x - otherEnd.x, 2) +
+                                Math.pow(newPos.y - otherEnd.y, 2));
+
+                totalLengthChange += (newLength - currentLength);
+            }
+        }
+
+        return totalLengthChange <= 0; 
+    }
+
+    public void moveTo(int newX, int newY) {
+        int deltaX = newX - x;
+        int deltaY = newY - y;
+
+        
+        this.x = newX;
+        this.y = newY;
+
+        
+        for (Port port : ports) {
+            port.setPosition(port.getX() + deltaX, port.getY() + deltaY);
+
+            
+            if (port.getWire() != null) {
+                port.getWire().updatePathPoints();
+                port.getWire().updateLength();
+            }
+        }
+    }
+
+    
+    public void setPosition(int x, int y) { this.x = x; this.y = y; }
     public void setSize(int width, int height) { this.width = width; this.height = height; }
     public int getX() { return x; }
     public int getY() { return y; }
@@ -187,4 +322,5 @@ public class Hop implements ValidDevice {
     public void setDetectionRadius(double radius) { this.detectionRadius = radius; }
     public ArrayList<Port> getPorts() { return ports; }
     public Queue<Pocket> getPockets() { return pockets; }
+    public int getPacketsProcessed() { return packetsProcessed; }
 }

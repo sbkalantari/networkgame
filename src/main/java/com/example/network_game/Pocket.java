@@ -7,7 +7,7 @@ public class Pocket {
     private ShapeType shape;
     private double size;
     private double speed;
-    private double currentSpeed = 0; 
+    private double currentSpeed = 0;
     private int coinReward;
     private Hop currentHop;
     private Wire currentWire;
@@ -20,10 +20,14 @@ public class Pocket {
     private int noiseLevel = 0;
     private Hop vpnSource = null;
     private boolean routeToIncompatible = false;
+    private double creationTime;
+    private double accelerationFactor = 1.0;
+    private boolean hasCollidedOnCurrentWire = false;
 
-
-    private static final double SPEED_DAMAGE_THRESHOLD = 300.0; 
-    private static final double ACCELERATION_WIRE_LENGTH_THRESHOLD = 200.0; 
+    
+    private static final double SPEED_DAMAGE_THRESHOLD = 300.0;
+    private static final double ACCELERATION_WIRE_LENGTH_THRESHOLD = 200.0;
+    private static final double PACKET_TIMEOUT = 30.0; 
 
     public Pocket() {
         this.progress = 0;
@@ -33,6 +37,7 @@ public class Pocket {
         this.coinReward = 1;
         this.shapeOffset = new Point(0, 0);
         this.health = 2;
+        this.creationTime = System.currentTimeMillis() / 1000.0;
     }
 
     public void setShape(ShapeType shape) {
@@ -48,66 +53,108 @@ public class Pocket {
         }
     }
 
-    public void updateProgress(double deltaTime) {
+    public void updateProgress(GameModel model, double deltaTime) {
         if (currentWire == null || state == PocketState.Lost) return;
+
+        
+        double currentTime = System.currentTimeMillis() / 1000.0;
+        if (currentTime - creationTime > PACKET_TIMEOUT) {
+            setState(PocketState.Lost);
+            return;
+        }
 
         Port destPort = currentWire.getDestination();
         double effectiveSpeed = speed;
 
         
-        if (destPort.getShape() != shape) {
-            if (shape == ShapeType.Square) {
-                effectiveSpeed *= 0.5; 
-            } else {
-                effectiveSpeed *= 1.5; 
+        Point packetProgressPoint = currentWire.getPointAt(progress);
+
+        if(!model.isAccelerationFrozen(currentWire, packetProgressPoint)) {
+            
+            boolean isCompatible = (destPort.getShape() == shape);
+
+            
+            effectiveSpeed = applyPacketTypeSpeedModifications(effectiveSpeed, isCompatible);
+
+            
+            double wireLength = currentWire.getLength();
+            if (wireLength > ACCELERATION_WIRE_LENGTH_THRESHOLD) {
+                double accelerationFactor = 1.0 + (wireLength - ACCELERATION_WIRE_LENGTH_THRESHOLD) / 1000.0;
+                effectiveSpeed *= accelerationFactor;
             }
         }
 
-        
-        switch (packetType) {
-            case CONFIDENTIAL:
-                
-                if (hasOtherPacketsInDestination()) {
-                    effectiveSpeed *= 0.7;
-                }
-                break;
-            case PROTECTED:
-                
-                effectiveSpeed *= (0.8 + Math.random() * 0.4); 
-                break;
-            case TROJAN:
-                
-                effectiveSpeed *= (0.5 + Math.random() * 1.0); 
-                break;
-        }
-
-        double wireLength = currentWire.getLength();
-
-        
-        if (wireLength > ACCELERATION_WIRE_LENGTH_THRESHOLD) {
-            double accelerationFactor = 1.0 + (wireLength - ACCELERATION_WIRE_LENGTH_THRESHOLD) / 1000.0;
-            effectiveSpeed *= accelerationFactor;
-        }
-
-        
         currentSpeed = effectiveSpeed;
-
+        double wireLength = currentWire.getLength();
         progress += (effectiveSpeed * deltaTime) / wireLength;
         if (progress > 1) progress = 1;
     }
 
-    
+
+    private double applyPacketTypeSpeedModifications(double baseSpeed, boolean isCompatible) {
+        switch (packetType) {
+            case TEXT_INCOMPATIBLE:
+                if (!isCompatible) {
+                    return baseSpeed * 2.0; 
+                }
+                return baseSpeed;
+
+            case VIDEO_ACCELERATING:
+                if (isCompatible) {
+                    return baseSpeed; 
+                } else {
+                    return baseSpeed * accelerationFactor; 
+                }
+
+            case AUDIO_DECELERATING:
+                if (isCompatible) {
+                    return baseSpeed * accelerationFactor; 
+                } else {
+                    return baseSpeed * 0.5; 
+                }
+
+            case CONFIDENTIAL:
+                if (hasOtherPacketsInDestination()) {
+                    return baseSpeed * 0.7; 
+                }
+                return baseSpeed;
+
+            case PROTECTED:
+                
+                return baseSpeed * (0.8 + Math.random() * 0.4);
+
+            case TROJAN:
+                
+                return baseSpeed * (0.5 + Math.random() * 1.0);
+
+            case LARGE_SMALL:
+            case LARGE_MEDIUM:
+            case LARGE_BIG:
+            case LARGE_HUGE:
+                
+                if (hasOtherPacketsInDestination()) {
+                    return baseSpeed * 0.7;
+                }
+                return baseSpeed;
+
+            default:
+                if (!isCompatible) {
+                    return shape == ShapeType.Square ? baseSpeed * 0.5 : baseSpeed * 1.5;
+                }
+                return baseSpeed;
+        }
+    }
+
     public boolean willDamageSystem() {
         return currentSpeed > SPEED_DAMAGE_THRESHOLD;
     }
 
-    
-
-
-
-
-
-
+    public void damageDestinationSystem() {
+        if (currentWire != null && willDamageSystem()) {
+            Hop destSystem = currentWire.getDestination().getHopConnected();
+            destSystem.deactivateTemporarily();
+        }
+    }
 
     public boolean isRouteToIncompatible() {
         return routeToIncompatible;
@@ -120,23 +167,47 @@ public class Pocket {
     public void setProtectedByVPN(Hop vpnSource) {
         this.vpnSource = vpnSource;
     }
+
     private boolean hasOtherPacketsInDestination() {
-        
-        return false;
+        if (currentWire == null) return false;
+        Hop destHop = currentWire.getDestination().getHopConnected();
+        return !destHop.getPockets().isEmpty();
+    }
+
+    
+    public void handleCollision(Pocket other) {
+        if (packetType == PacketType.AUDIO_DECELERATING && !hasCollidedOnCurrentWire) {
+            
+            progress = 1.0 - progress;
+            hasCollidedOnCurrentWire = true;
+
+            
+            Port temp = currentWire.getSource();
+            currentWire.setSource(currentWire.getDestination());
+            currentWire.setDestination(temp);
+        }
+    }
+
+    public void resetForNewWire() {
+        hasCollidedOnCurrentWire = false;
+        accelerationFactor = 1.0;
     }
 
     
     public PacketType getPacketType() { return packetType; }
-    public void setPacketType(PacketType packetType) { this.packetType = packetType; }
+    public void setPacketType(PacketType packetType) {
+        this.packetType = packetType;
+        this.coinReward = packetType.getCoinReward();
+        this.size = packetType.getSize();
+    }
+
     public int getNoiseLevel() { return noiseLevel; }
     public void addNoise(int noise) { this.noiseLevel += noise; }
     public Hop getVpnSource() { return vpnSource; }
     public void setVpnSource(Hop vpnSource) { this.vpnSource = vpnSource; }
     public double getCurrentSpeed() { return currentSpeed; }
 
-    
     public boolean gotHit(Pocket pocket) {
-        System.out.println("got hit");
         this.health--;
         this.lastHit = pocket;
         if (health <= 0) {
@@ -154,12 +225,16 @@ public class Pocket {
     public Shape getShape(Point center) {
         int x = center.x + shapeOffset.x;
         int y = center.y + shapeOffset.y;
+
+        
+        int shapeSize = (int)(8 * Math.sqrt(packetType.getSize()));
+
         if (shape == ShapeType.Square) {
-            return new Rectangle2D.Double(x - 8, y - 8, 16, 16);
+            return new Rectangle2D.Double(x - shapeSize/2, y - shapeSize/2, shapeSize, shapeSize);
         } else {
             return new Polygon(
-                    new int[]{x, x - 10, x + 10},
-                    new int[]{y - 10, y + 10, y + 10},
+                    new int[]{x, x - shapeSize/2, x + shapeSize/2},
+                    new int[]{y - shapeSize/2, y + shapeSize/2, y + shapeSize/2},
                     3
             );
         }
@@ -184,9 +259,11 @@ public class Pocket {
         Point center = getCenterOfMass();
         double distance = Math.sqrt(Math.pow(center.x - collisionPoint.x, 2) + Math.pow(center.y - collisionPoint.y, 2));
         double radius = 100.0;
+
         if (distance < radius && distance > 0) {
             double strength = (radius - distance) / radius;
             double maxDisplacement = 5.0;
+
             double wireDx = dest.x - src.x;
             double wireDy = dest.y - src.y;
             double wireLength = Math.sqrt(wireDx * wireDx + wireDy * wireDy);
@@ -194,11 +271,12 @@ public class Pocket {
 
             double perpDx = -wireDy / wireLength;
             double perpDy = wireDx / wireLength;
+
             double dx = center.x - collisionPoint.x;
             double dy = center.y - collisionPoint.y;
             double dot = dx * perpDx + dy * perpDy;
-            double displacement = strength * maxDisplacement * Math.signum(dot);
 
+            double displacement = strength * maxDisplacement * Math.signum(dot);
             shapeOffset.x += (int)(perpDx * displacement);
             shapeOffset.y += (int)(perpDy * displacement);
         }
@@ -211,47 +289,19 @@ public class Pocket {
         return !shape.contains(center.x, center.y);
     }
 
-    public ShapeType getShapeType() {
-        return shape;
-    }
-
-    public double getSize() {
-        return size;
-    }
-
-    public int getCoinReward() {
-        return coinReward;
-    }
-
-    public Hop getCurrentHop() {
-        return currentHop;
-    }
-
-    public void setCurrentHop(Hop hop) {
-        this.currentHop = hop;
-    }
-
-    public Wire getCurrentWire() {
-        return currentWire;
-    }
-
+    
+    public ShapeType getShapeType() { return shape; }
+    public double getSize() { return size; }
+    public int getCoinReward() { return coinReward; }
+    public Hop getCurrentHop() { return currentHop; }
+    public void setCurrentHop(Hop hop) { this.currentHop = hop; }
+    public Wire getCurrentWire() { return currentWire; }
     public void setCurrentWire(Wire wire) {
         this.currentWire = wire;
+        resetForNewWire();
     }
-
-    public double getProgress() {
-        return progress;
-    }
-
-    public void setProgress(double progress) {
-        this.progress = progress;
-    }
-
-    public Pocket getLastHit() {
-        return lastHit;
-    }
-
-    public void setLastHit(Pocket lastHit) {
-        this.lastHit = lastHit;
-    }
+    public double getProgress() { return progress; }
+    public void setProgress(double progress) { this.progress = progress; }
+    public Pocket getLastHit() { return lastHit; }
+    public void setLastHit(Pocket lastHit) { this.lastHit = lastHit; }
 }
