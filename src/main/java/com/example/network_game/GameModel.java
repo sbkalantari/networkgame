@@ -186,8 +186,8 @@ public class GameModel implements ValidDevice {
                 for (int j = i + 1; j < pockets.size(); j++) {
                     Pocket p2 = pockets.get(j);
                     if (p2.getState() != PocketState.InProgress || p2.getCurrentWire() == null) continue;
-                    Point c1 = p1.getCenterOfMass(p1.getCurrentWire().getSource().getPosition(), p1.getCurrentWire().getDestination().getPosition());
-                    Point c2 = p2.getCenterOfMass(p2.getCurrentWire().getSource().getPosition(), p2.getCurrentWire().getDestination().getPosition());
+                    Point c1 = p1.getCenterOfMass();
+                    Point c2 = p2.getCenterOfMass();
                     if (c1 != null && c2 != null && p1.getShape(c1).intersects(p2.getShape(c2).getBounds2D())) {
                         if (p1.getLastHit() == p2) {
                             System.out.println("I'm here");
@@ -418,7 +418,7 @@ public class GameModel implements ValidDevice {
 
         Hop destHop = p2.getHopConnected();
         boolean hasMatchingOutput = false;
-        for (Port port : destHop.ports) {
+        for (Port port : destHop.getPorts()) {
             if (port.getType() == PortType.Output && port.getShape() == p1.getShape()) {
                 hasMatchingOutput = true;
                 break;
@@ -427,6 +427,10 @@ public class GameModel implements ValidDevice {
         if (!hasMatchingOutput) {
             return null;
         }
+        if (!wire.validatePath(systems)) {
+            return null;
+        }
+
         p1.setWire(wire);
         p2.setWire(wire);
         wires.add(wire);

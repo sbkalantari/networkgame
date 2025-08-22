@@ -67,11 +67,9 @@ public class Pocket {
                 effectiveSpeed *= 1.5;
             }
         }
-        double distance = Math.sqrt(
-                Math.pow(currentWire.getDestination().getX() - currentWire.getSource().getX(), 2) +
-                        Math.pow(currentWire.getDestination().getY() - currentWire.getSource().getY(), 2)
-        );
-        progress += (effectiveSpeed * deltaTime) / distance;
+        double wireLength = currentWire.getLength();
+        progress += (effectiveSpeed * deltaTime) / wireLength;
+
         if (progress > 1) progress = 1;
     }
 
@@ -97,17 +95,14 @@ public class Pocket {
         return state;
     }
 
-    public Point getCenterOfMass(Point src, Point dest) {
+    public Point getCenterOfMass() {
         if (currentWire == null) return null;
-        double t = progress;
-        int x = (int)(src.x * (1 - t) + dest.x * t);
-        int y = (int)(src.y * (1 - t) + dest.y * t);
-        return new Point(x, y);
+        return currentWire.getPointAt(progress);
     }
 
     public void applyImpactDisplacement(Point collisionPoint, Point src, Point dest) {
         if (currentWire == null || state != PocketState.InProgress) return;
-        Point center = getCenterOfMass(src, dest);
+        Point center = getCenterOfMass();
         double distance = Math.sqrt(Math.pow(center.x - collisionPoint.x, 2) + Math.pow(center.y - collisionPoint.y, 2));
         double radius = 100.0;
         if (distance < radius && distance > 0) {
@@ -130,7 +125,7 @@ public class Pocket {
 
     public boolean isCenterOfMassOutsideShape() {
         if (currentWire == null) return false;
-        Point center = getCenterOfMass(currentWire.getSource().getPosition(), currentWire.getDestination().getPosition());
+        Point center = getCenterOfMass();
         Shape shape = getShape(center);
         return !shape.contains(center.x, center.y);
     }

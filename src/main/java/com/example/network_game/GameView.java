@@ -186,15 +186,24 @@ public class GameView extends JPanel {
             g2d.drawLine(src.x, src.y, mousePos.x, mousePos.y);
         }
 
-        
+
         g2d.setStroke(new BasicStroke(2));
         for (Wire wire : model.getWires()) {
-            Point src = wire.getSource().getPosition();
-            Point dst = wire.getDestination().getPosition();
-            g2d.setColor(wire.IsValid() ? new Color(0, 200, 0) : new Color(255, 0, 0)); 
-            g2d.drawLine(src.x, src.y, dst.x, dst.y);
-            
+            Path2D.Double path = wire.getPath();
+            g2d.setColor(wire.IsValid() ? new Color(0, 200, 0) : new Color(255, 0, 0));
+            g2d.draw(path);
+
+            for (WireCurve curve : wire.getCurves()) {
+                Point curvePos = curve.getPosition();
+                g2d.setColor(new Color(255, 255, 0, 100));
+                g2d.fillOval(curvePos.x - 5, curvePos.y - 5, 10, 10);
+                g2d.setColor(Color.YELLOW);
+                g2d.drawOval(curvePos.x - 5, curvePos.y - 5, 10, 10);
+            }
+
             if (System.currentTimeMillis() - wire.getCreationTime() < 500) {
+                Point src = wire.getSource().getPosition();
+                Point dst = wire.getDestination().getPosition();
                 g2d.setColor(new Color(255, 255, 0, 150));
                 g2d.fillOval(src.x - 5, src.y - 5, 10, 10);
                 g2d.fillOval(dst.x - 5, dst.y - 5, 10, 10);
@@ -202,11 +211,12 @@ public class GameView extends JPanel {
         }
 
 
+
         for (Pocket pocket : model.getPockets()) {
             if (pocket.getState() == PocketState.InProgress && pocket.getCurrentWire() != null) {
                 Point src = pocket.getCurrentWire().getSource().getPosition();
                 Point dst = pocket.getCurrentWire().getDestination().getPosition();
-                Point center = pocket.getCenterOfMass(src, dst);
+                Point center = pocket.getCenterOfMass();
                 if (center != null) {
                     Shape shape = pocket.getShape(center); 
                     g2d.setColor(pocket.getShapeType() == ShapeType.Square ? new Color(0, 200, 200) : new Color(200, 0, 200));

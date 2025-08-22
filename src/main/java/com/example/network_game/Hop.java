@@ -16,6 +16,10 @@ public class Hop implements ValidDevice {
         return true;
     }
 
+    public ArrayList<Port> getPorts() {
+        return ports;
+    }
+
     public void setPosition(int x, int y) {
         this.x = x;
         this.y = y;

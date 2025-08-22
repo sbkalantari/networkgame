@@ -12,7 +12,9 @@ public class GameController {
     private CardLayout cardLayout;
     private JPanel cardPanel;
     private GameStageController stageController;
-    private int currentStage; 
+    private int currentStage;
+    private Wire selectedWireForCurveDrag = null;
+    private WireCurve selectedCurve = null;
 
     public GameController(GameModel model, GameView view, CardLayout cardLayout, JPanel cardPanel) {
         this.model = model;
@@ -34,9 +36,19 @@ public class GameController {
     }
 
     private void setupListeners() {
+
         view.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
+                for (Wire wire : model.getWires()) {
+                    for (WireCurve curve : wire.getCurves()) {
+                        if (curve.contains(e.getPoint())) {
+                            selectedWireForCurveDrag = wire;
+                            selectedCurve = curve;
+                            return;
+                        }
+                    }
+                }
                 if (SwingUtilities.isLeftMouseButton(e)) {
                     double[] targetTime = new double[1];
                     if (model.isTimeBarClicked(e.getPoint(), targetTime)) {
@@ -53,7 +65,14 @@ public class GameController {
                     }
                 } else if (SwingUtilities.isRightMouseButton(e)) {
                     handleRightClick(e.getPoint());
+                } else if (SwingUtilities.isMiddleMouseButton(e)) {
+                handleMiddleClick(e.getPoint());
                 }
+            }
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                selectedWireForCurveDrag = null;
+                selectedCurve = null;
             }
         });
 
@@ -61,6 +80,15 @@ public class GameController {
             @Override
             public void mouseMoved(MouseEvent e) {
                 view.setMousePos(e.getPoint()); 
+            }
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                if (selectedCurve != null) {
+                    selectedCurve.setPosition(e.getPoint());
+                    selectedWireForCurveDrag.updatePathPoints();
+                    selectedWireForCurveDrag.updateLength();
+                    view.repaint();
+                }
             }
         });
 
@@ -147,6 +175,35 @@ public class GameController {
             view.repaint();
         }
     }
+
+    
+    private void handleMiddleClick(Point clickPoint) {
+        if (model.isGameOver() || model.isLevelPassed()) return;
+
+        Wire wireForCurve = model.findWireAt(clickPoint);
+        if (wireForCurve != null && wireForCurve.canAddCurve()) {
+            if (model.spendCoins(1)) {
+                double candidateLength = WireValidator.calculateCurvedWireLength(wireForCurve.getPathPoints());
+                double totalWireLength = 0.0;
+                for (Wire wire : model.getWires()) {
+                    if (wire == wireForCurve) {
+                        totalWireLength += candidateLength;
+                    } else {
+                        totalWireLength += wire.getLength();
+                    }
+                }
+                if (totalWireLength > model.getMaxWireLength()) {
+                    System.out.println("Wire length limit exceeded, can't add curve.");
+                    return;
+                }
+                wireForCurve.addCurve(clickPoint, 20.0); 
+                AudioManager.playConnectSound();
+                System.out.println("Wire curve added for 1 coin");
+                view.repaint();
+            }
+        }
+    }
+
 
     private void handleRightClick(Point clickPoint) {
         if (model.isGameOver() || model.isLevelPassed()) return;
