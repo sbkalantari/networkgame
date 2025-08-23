@@ -58,21 +58,51 @@ public class GameModel implements ValidDevice {
         initializeSystems(systemPositions);
     }
 
+    public GameModel (int[][] positions, SystemType[] types, double duration, double maxWireLength) {
+        systems = new ArrayList<>();
+        wires = new ArrayList<>();
+        pockets = new ArrayList<>();
+        selectedPort = null;
+        isPlaying = false;
+        this.maxWireLength = maxWireLength;
+        totalWireLength = 0.0;
+        totalPackets = 0;
+        lostPackets = 0;
+        coins = 0;
+        this.stageDuration = duration;
+        currentTime = 0.0;
+        inProgress = 0;
+        isGameOver = false;
+        isLevelPassed = false;
+        isOAtarActive = false;
+        isOAiryamanActive = false;
+
+        int systemWidth = 80;
+        int systemHeight = 60;
+
+        for (int i = 0; i < positions.length; i++) {
+            int x = positions[i][0];
+            int y = positions[i][1];
+            SystemType type = i < types.length ? types[i] : SystemType.NORMAL;
+            Hop system = this.createSystem(x, y, 2, 2, type, systemWidth, systemHeight);
+            system.setSize(systemWidth, systemHeight);
+            this.getSystems().add(system);
+        }
+    }
+
     private void initializeSystems(int[][] systemPositions) {
         SystemType[] types = {SystemType.NORMAL, SystemType.SPY, SystemType.VPN, SystemType.SABOTAGE};
 
         for (int i = 0; i < systemPositions.length; i++) {
             int[] pos = systemPositions[i];
             SystemType type = i < types.length ? types[i] : SystemType.NORMAL;
-            systems.add(createSystem(pos[0], pos[1], 2, 2, type));
+            systems.add(createSystem(pos[0], pos[1], 2, 2, type, 80, 60));
         }
     }
 
-    private Hop createSystem(int x, int y, int inputPorts, int outputPorts, SystemType type) {
+    private Hop createSystem(int x, int y, int inputPorts, int outputPorts, SystemType type, int systemWidth, int systemHeight) {
         Hop system = new Hop(type);
-        int systemWidth = 100;
-        int systemHeight = 80;
-        int offset = 10;
+        int offset = 8;        
 
         double inputStep = inputPorts > 1 ? (systemHeight - 2 * offset) / (double)(inputPorts - 1) : 0;
         double outputStep = outputPorts > 1 ? (systemHeight - 2 * offset) / (double)(outputPorts - 1) : 0;
