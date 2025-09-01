@@ -1,24 +1,26 @@
 package com.example.network_game;
 
+import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.swing.Timer;
 
 public class GameModel implements ValidDevice {
-    private List<Hop> systems;
-    private List<Wire> wires;
-    private List<Pocket> pockets;
+    private static final int AERGIA_DURATION_MS = 20000;
+    private static final int ELIPHAS_DURATION_MS = 30000;
+    private final List<Hop> systems;
+    private final List<Wire> wires;
+    private final List<Pocket> pockets;
     private Port selectedPort;
     private boolean isPlaying;
-    private double maxWireLength;
+    private final double maxWireLength;
     private double totalWireLength;
     private int totalPackets;
     private int lostPackets;
     private int coins;
-    private double stageDuration;
+    private final double stageDuration;
     private double currentTime;
     private int inProgress;
     private boolean isGameOver;
@@ -27,11 +29,8 @@ public class GameModel implements ValidDevice {
     private boolean isOAiryamanActive;
     private Timer oAtarTimer;
     private Timer oAiryamanTimer;
-
-    private static final int AERGIA_DURATION_MS = 20000; 
-    private static final int ELIPHAS_DURATION_MS = 30000;
-    private Map<Wire, List<AccelerationFreeze>> accelerationFreezes = new HashMap<>();
-    private Map<Wire, List<CenterResetEffect>> centerResetEffects = new HashMap<>();
+    private final Map<Wire, List<AccelerationFreeze>> accelerationFreezes = new HashMap<>();
+    private final Map<Wire, List<CenterResetEffect>> centerResetEffects = new HashMap<>();
 
     public GameModel() {
         this(new int[][]{{100, 100}, {500, 100}, {100, 400}, {500, 400}}, 60.0, 3000.0);
@@ -58,7 +57,7 @@ public class GameModel implements ValidDevice {
         initializeSystems(systemPositions);
     }
 
-    public GameModel (int[][] positions, SystemType[] types, double duration, double maxWireLength) {
+    public GameModel(int[][] positions, SystemType[] types, double duration, double maxWireLength) {
         systems = new ArrayList<>();
         wires = new ArrayList<>();
         pockets = new ArrayList<>();
@@ -102,17 +101,17 @@ public class GameModel implements ValidDevice {
 
     private Hop createSystem(int x, int y, int inputPorts, int outputPorts, SystemType type, int systemWidth, int systemHeight) {
         Hop system = new Hop(type);
-        int offset = 8;        
+        int offset = 8;
 
-        double inputStep = inputPorts > 1 ? (systemHeight - 2 * offset) / (double)(inputPorts - 1) : 0;
-        double outputStep = outputPorts > 1 ? (systemHeight - 2 * offset) / (double)(outputPorts - 1) : 0;
+        double inputStep = inputPorts > 1 ? (systemHeight - 2 * offset) / (double) (inputPorts - 1) : 0;
+        double outputStep = outputPorts > 1 ? (systemHeight - 2 * offset) / (double) (outputPorts - 1) : 0;
 
         for (int i = 0; i < inputPorts; i++) {
             Port port = new Port();
             port.setType(PortType.Input);
             port.setShape(i == 0 ? ShapeType.Square : ShapeType.Triangle);
             port.setHopConnected(system);
-            int portY = inputPorts == 1 ? y + systemHeight / 2 : y + offset + (int)(i * inputStep);
+            int portY = inputPorts == 1 ? y + systemHeight / 2 : y + offset + (int) (i * inputStep);
             port.setPosition(x, portY);
             system.getPorts().add(port);
         }
@@ -122,7 +121,7 @@ public class GameModel implements ValidDevice {
             port.setType(PortType.Output);
             port.setShape(i == 0 ? ShapeType.Square : ShapeType.Triangle);
             port.setHopConnected(system);
-            int portY = outputPorts == 1 ? y + systemHeight / 2 : y + offset + (int)(i * outputStep);
+            int portY = outputPorts == 1 ? y + systemHeight / 2 : y + offset + (int) (i * outputStep);
             port.setPosition(x + systemWidth, portY);
             system.getPorts().add(port);
         }
@@ -235,7 +234,7 @@ public class GameModel implements ValidDevice {
                             continue;
                         }
                         safe = false;
-                        if (p1.gotHit(p2)){
+                        if (p1.gotHit(p2)) {
                             pocketsToRemove.add(p1);
                             System.out.println("died");
                         }
@@ -401,10 +400,10 @@ public class GameModel implements ValidDevice {
     private Port chooseOutputPort(Pocket pocket) {
         Hop hop = pocket.getCurrentHop();
 
-        
+
         Pocket processedPacket = hop.processPacket(pocket, systems);
 
-        
+
         if (pocket.isRouteToIncompatible()) {
             List<Port> incompatiblePorts = new ArrayList<>();
             for (Port port : hop.getPorts()) {
@@ -416,16 +415,16 @@ public class GameModel implements ValidDevice {
             if (!incompatiblePorts.isEmpty()) {
                 for (Port port : incompatiblePorts) {
                     if (isPortEmpty(port)) {
-                        pocket.setRouteToIncompatible(false);  
+                        pocket.setRouteToIncompatible(false);
                         return port;
                     }
                 }
             }
-            
+
             pocket.setRouteToIncompatible(false);
         }
 
-        
+
         List<Port> compatiblePorts = new ArrayList<>();
         for (Port port : hop.getPorts()) {
             if (port.getType() == PortType.Output && port.getWire() != null
@@ -537,12 +536,12 @@ public class GameModel implements ValidDevice {
 
         long now = System.currentTimeMillis();
         for (AccelerationFreeze freeze : freezes) {
-            if (freeze.expiryTime < now) continue; 
+            if (freeze.expiryTime < now) continue;
             final int freezeRadius = 50;
             double distSq = (freeze.point.x - position.x) * (freeze.point.x - position.x)
                     + (freeze.point.y - position.y) * (freeze.point.y - position.y);
             if (distSq <= freezeRadius * freezeRadius) {
-                return true; 
+                return true;
             }
         }
 
@@ -614,6 +613,10 @@ public class GameModel implements ValidDevice {
         return totalWireLength;
     }
 
+    public void setTotalWireLength(double totalWireLength) {
+        this.totalWireLength = totalWireLength;
+    }
+
     public int getTotalSent() {
         return inProgress + lostPackets;
     }
@@ -622,8 +625,24 @@ public class GameModel implements ValidDevice {
         return lostPackets;
     }
 
+    public void setLostPackets(int lostPackets) {
+        this.lostPackets = lostPackets;
+    }
+
     public int getCoins() {
         return coins;
+    }
+
+    public void setCoins(int coins) {
+        this.coins = coins;
+    }
+
+    public int getTotalPackets() {
+        return totalPackets;
+    }
+
+    public void setTotalPackets(int totalPackets) {
+        this.totalPackets = totalPackets;
     }
 
     public double getTemporalProgress() {
@@ -646,7 +665,7 @@ public class GameModel implements ValidDevice {
         isPlaying = playing;
     }
 
-    public boolean getPlaying(){
+    public boolean getPlaying() {
         return isPlaying;
     }
 
@@ -655,5 +674,13 @@ public class GameModel implements ValidDevice {
             if (!hop.IsValid())
                 return false;
         return true;
+    }
+
+    public double getCurrentTime() {
+        return currentTime;
+    }
+
+    public void setCurrentTime(double currentTime) {
+        this.currentTime = currentTime;
     }
 }

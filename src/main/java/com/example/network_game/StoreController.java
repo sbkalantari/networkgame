@@ -4,11 +4,11 @@ import javax.swing.*;
 import java.awt.*;
 
 public class StoreController {
-    private StorePanel view;
-    private GameModel model;
-    private CardLayout cardLayout;
-    private JPanel cardPanel;
-    private GameController gameController;
+    private final StorePanel view;
+    private final GameModel model;
+    private final CardLayout cardLayout;
+    private final JPanel cardPanel;
+    private final GameController gameController;
     private boolean waitingForSystemSelection = false;
     private boolean waitingForWireSelection = false;
     private String currentScrollType = "";
@@ -24,12 +24,12 @@ public class StoreController {
     }
 
     private void setupListeners() {
-        
+
         view.getOAtarButton().addActionListener(e -> purchaseOAtar());
         view.getOAiryamanButton().addActionListener(e -> purchaseOAiryaman());
         view.getOAnahitaButton().addActionListener(e -> purchaseOAnahita());
 
-        
+
         view.getScrollAergiaButton().addActionListener(e -> purchaseScrollAergia());
         view.getScrollSisyphusButton().addActionListener(e -> purchaseScrollSisyphus());
         view.getScrollEliphasButton().addActionListener(e -> purchaseScrollEliphas());
@@ -79,7 +79,7 @@ public class StoreController {
             waitingForWireSelection = true;
             currentScrollType = "Aergia";
 
-            
+
             gameController.resumeGame();
             cardLayout.show(cardPanel, "Game");
 
@@ -98,7 +98,7 @@ public class StoreController {
             waitingForSystemSelection = true;
             currentScrollType = "Sisyphus";
 
-            
+
             gameController.resumeGame();
             cardLayout.show(cardPanel, "Game");
 
@@ -117,7 +117,7 @@ public class StoreController {
             waitingForWireSelection = true;
             currentScrollType = "Eliphas";
 
-            
+
             gameController.resumeGame();
             cardLayout.show(cardPanel, "Game");
 
@@ -130,7 +130,7 @@ public class StoreController {
         }
     }
 
-    
+
     public boolean handleWireClick(Wire wire, Point clickPoint) {
         if (!waitingForWireSelection) return false;
 
@@ -149,12 +149,20 @@ public class StoreController {
         return true;
     }
 
-    
-    public boolean isWaitingForWireSelection() { return waitingForWireSelection; }
-    public boolean isWaitingForSystemSelection() { return waitingForSystemSelection; }
-    public String getCurrentScrollType() { return currentScrollType; }
 
-    
+    public boolean isWaitingForWireSelection() {
+        return waitingForWireSelection;
+    }
+
+    public boolean isWaitingForSystemSelection() {
+        return waitingForSystemSelection;
+    }
+
+    public String getCurrentScrollType() {
+        return currentScrollType;
+    }
+
+
     public void cancelSelection() {
         waitingForWireSelection = false;
         waitingForSystemSelection = false;

@@ -2,18 +2,20 @@ package com.example.network_game;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.util.List;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 import java.util.ArrayList;
+import java.util.List;
 
 public class GameController {
     private GameModel model;
     private boolean beforeStopState;
-    private GameView view;
+    private final GameView view;
     private Timer animationTimer;
-    private CardLayout cardLayout;
-    private JPanel cardPanel;
-    private GameStageController stageController;
+    private final CardLayout cardLayout;
+    private final JPanel cardPanel;
+    private final GameStageController stageController;
     private int currentStage;
     private Wire selectedWireForCurveDrag = null;
     private WireCurve selectedCurve = null;
@@ -24,7 +26,7 @@ public class GameController {
         this.cardLayout = cardLayout;
         this.cardPanel = cardPanel;
         this.stageController = new GameStageController(new GameStagesPanel(cardLayout, cardPanel), cardLayout, cardPanel, view, this);
-        this.currentStage = 1; 
+        this.currentStage = 1;
         setupListeners();
         setupPlayButton();
         setupAnimationTimer();
@@ -33,7 +35,7 @@ public class GameController {
     public void setGameModel(GameModel model) {
         this.model = model;
         stopAnimation();
-        view.setGameModel(model); 
+        view.setGameModel(model);
         view.repaint();
     }
 
@@ -68,9 +70,10 @@ public class GameController {
                 } else if (SwingUtilities.isRightMouseButton(e)) {
                     handleRightClick(e.getPoint());
                 } else if (SwingUtilities.isMiddleMouseButton(e)) {
-                handleMiddleClick(e.getPoint());
+                    handleMiddleClick(e.getPoint());
                 }
             }
+
             @Override
             public void mouseReleased(MouseEvent e) {
                 selectedWireForCurveDrag = null;
@@ -81,16 +84,17 @@ public class GameController {
         view.addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
-                view.setMousePos(e.getPoint()); 
+                view.setMousePos(e.getPoint());
             }
+
             @Override
             public void mouseDragged(MouseEvent e) {
                 if (selectedCurve != null && selectedWireForCurveDrag != null) {
-                    
+
                     Point originalPos = selectedCurve.getPosition();
                     double originalLength = selectedWireForCurveDrag.getLength();
 
-                    
+
                     selectedCurve.setPosition(e.getPoint());
                     selectedWireForCurveDrag.updatePathPoints();
                     selectedWireForCurveDrag.updateLength();
@@ -98,15 +102,15 @@ public class GameController {
                     double newLength = selectedWireForCurveDrag.getLength();
                     double lengthDifference = newLength - originalLength;
 
-                    
+
                     if (model.getTotalWireLength() + lengthDifference > model.getMaxWireLength()) {
-                        
+
                         selectedCurve.setPosition(originalPos);
                         selectedWireForCurveDrag.updatePathPoints();
                         selectedWireForCurveDrag.updateLength();
                         System.out.println("Wire length limit exceeded, curve movement reverted.");
                     } else {
-                        
+
                         model.updateTotalWireLength(lengthDifference);
                     }
 
@@ -117,19 +121,15 @@ public class GameController {
 
         view.getReturnToMenuButton().addActionListener(e -> {
             model.resetStage();
-            currentStage = 1; 
+            currentStage = 1;
             cardLayout.show(cardPanel, "MainMenu");
         });
 
         view.getNextStageButton().addActionListener(e -> {
-            
-            currentStage = (currentStage % 2) + 1; 
-            if (currentStage == 1) {
-                stageController.selectStage1();
-            } else {
-                stageController.selectStage2();
-            }
-            System.out.println("Advanced to Stage " + currentStage); 
+
+            currentStage = (currentStage % 5) + 1;
+            stageController.selectStage(currentStage);
+            System.out.println("Advanced to Stage " + currentStage);
             view.repaint();
         });
 
@@ -148,7 +148,7 @@ public class GameController {
     }
 
     private void setupPlayButton() {
-        
+
     }
 
     private void setupAnimationTimer() {
@@ -191,7 +191,7 @@ public class GameController {
             } else {
                 if (model.connectPorts(model.getSelectedPort(), clickedPort) != null) {
                     AudioManager.playConnectSound();
-                    System.out.println("Port connected, connect sound played"); 
+                    System.out.println("Port connected, connect sound played");
                 }
                 model.setSelectedPort(null);
             }
@@ -206,21 +206,21 @@ public class GameController {
         if (wireForCurve != null && wireForCurve.canAddCurve()) {
             if (model.spendCoins(1)) {
                 List<Point> tempPathPoints = new ArrayList<>(wireForCurve.getPathPoints());
-                tempPathPoints.add(tempPathPoints.size() - 1, clickPoint); 
+                tempPathPoints.add(tempPathPoints.size() - 1, clickPoint);
 
                 double newWireLength = WireValidator.calculateCurvedWireLength(tempPathPoints);
                 double lengthDifference = newWireLength - wireForCurve.getLength();
 
-                
+
                 if (model.getTotalWireLength() + lengthDifference <= model.getMaxWireLength()) {
                     wireForCurve.addCurve(clickPoint, 20.0);
-                    
+
                     model.updateTotalWireLength(lengthDifference);
                     AudioManager.playConnectSound();
                     System.out.println("Wire curve added for 1 coin");
                     view.repaint();
                 } else {
-                    
+
                     model.addCoins(1);
                     System.out.println("Wire length limit exceeded, can't add curve.");
                 }
@@ -235,7 +235,7 @@ public class GameController {
         if (wireToRemove != null) {
             model.removeWire(wireToRemove);
             AudioManager.playCutSound();
-            System.out.println("Wire removed, cut sound played"); 
+            System.out.println("Wire removed, cut sound played");
             view.repaint();
         }
     }

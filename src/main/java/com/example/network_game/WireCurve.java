@@ -13,12 +13,29 @@ public class WireCurve {
         this.active = true;
     }
 
-    public Point getPosition() { return new Point(position); }
-    public void setPosition(Point position) { this.position = new Point(position); }
-    public double getRadius() { return radius; }
-    public void setRadius(double radius) { this.radius = radius; }
-    public boolean isActive() { return active; }
-    public void setActive(boolean active) { this.active = active; }
+    public Point getPosition() {
+        return new Point(position);
+    }
+
+    public void setPosition(Point position) {
+        this.position = new Point(position);
+    }
+
+    public double getRadius() {
+        return radius;
+    }
+
+    public void setRadius(double radius) {
+        this.radius = radius;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
 
     public boolean contains(Point point) {
         double distance = Math.sqrt(Math.pow(point.x - position.x, 2) +

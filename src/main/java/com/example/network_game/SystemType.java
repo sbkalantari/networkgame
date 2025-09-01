@@ -7,5 +7,5 @@ public enum SystemType {
     VPN,
     ANTI_TROJAN,
     DISTRIBUTE,
-    MERGE;
+    MERGE
 }

@@ -8,7 +8,7 @@ public class StorePanel extends JPanel {
     private JButton oAiryamanButton;
     private JButton oAnahitaButton;
 
-    
+
     private JButton scrollAergiaButton;
     private JButton scrollSisyphusButton;
     private JButton scrollEliphasButton;
@@ -36,7 +36,7 @@ public class StorePanel extends JPanel {
         coinLabel.setForeground(Color.WHITE);
         add(coinLabel);
 
-        
+
         oAtarButton = createStoreButton("O' Atar (3 coins)", 150, 150);
         oAtarButton.setToolTipText("Disables impact waves for 10 seconds");
         add(oAtarButton);
@@ -49,7 +49,7 @@ public class StorePanel extends JPanel {
         oAnahitaButton.setToolTipText("Resets all packet health");
         add(oAnahitaButton);
 
-        
+
         scrollAergiaButton = createStoreButton("Scroll of Aergia (10 coins)", 450, 210);
         scrollAergiaButton.setToolTipText("Stops packet acceleration for 15 seconds");
         add(scrollAergiaButton);
@@ -95,13 +95,33 @@ public class StorePanel extends JPanel {
         return button;
     }
 
-    public JButton getOAtarButton() { return oAtarButton; }
-    public JButton getOAiryamanButton() { return oAiryamanButton; }
-    public JButton getOAnahitaButton() { return oAnahitaButton; }
-    public JButton getScrollAergiaButton() { return scrollAergiaButton; }
-    public JButton getScrollSisyphusButton() { return scrollSisyphusButton; }
-    public JButton getScrollEliphasButton() { return scrollEliphasButton; }
-    public JButton getBackButton() { return backButton; }
+    public JButton getOAtarButton() {
+        return oAtarButton;
+    }
+
+    public JButton getOAiryamanButton() {
+        return oAiryamanButton;
+    }
+
+    public JButton getOAnahitaButton() {
+        return oAnahitaButton;
+    }
+
+    public JButton getScrollAergiaButton() {
+        return scrollAergiaButton;
+    }
+
+    public JButton getScrollSisyphusButton() {
+        return scrollSisyphusButton;
+    }
+
+    public JButton getScrollEliphasButton() {
+        return scrollEliphasButton;
+    }
+
+    public JButton getBackButton() {
+        return backButton;
+    }
 
     public void updateCoinLabel(int coins) {
         coinLabel.setText("Coins: " + coins);

@@ -9,14 +9,14 @@ import java.util.List;
 
 
 public class Wire implements ValidDevice {
+    private static final int MAX_CURVES = 3;
     private Port source;
     private Port destination;
     private double length;
-    private long creationTime;
-    private List<WireCurve> curves;
-    private List<Point> pathPoints;
+    private final long creationTime;
+    private final List<WireCurve> curves;
+    private final List<Point> pathPoints;
     private boolean valid;
-    private static final int MAX_CURVES = 3;
 
     public Wire() {
         this.creationTime = System.currentTimeMillis();
@@ -56,7 +56,7 @@ public class Wire implements ValidDevice {
 
         pathPoints.add(source.getPosition());
 
-        
+
         for (WireCurve curve : curves) {
             if (curve.isActive()) {
                 pathPoints.add(curve.getPosition());
@@ -67,12 +67,12 @@ public class Wire implements ValidDevice {
     }
 
     public Point getPointAt(double progress) {
-        
+
         if (progress <= 0) return getPathPoints().get(0);
         if (progress >= 1) return getPathPoints().get(getPathPoints().size() - 1);
 
         Path2D.Double path = getPath();
-        
+
         final double flatness = 0.5;
         PathIterator it = path.getPathIterator(null, flatness);
 
@@ -95,7 +95,7 @@ public class Wire implements ValidDevice {
             it.next();
         }
 
-        
+
         java.util.List<Double> segLengths = new java.util.ArrayList<>();
         totalLength = 0;
         for (int i = 1; i < points.size(); i++) {
@@ -106,7 +106,7 @@ public class Wire implements ValidDevice {
             totalLength += segLen;
         }
 
-        
+
         double targetLen = progress * totalLength;
         double currLen = 0;
         for (int i = 1; i < points.size(); i++) {
@@ -120,7 +120,7 @@ public class Wire implements ValidDevice {
             }
             currLen += segLen;
         }
-        
+
         Point2D.Double last = points.get(points.size() - 1);
         return new Point((int) last.x, (int) last.y);
     }
@@ -138,22 +138,21 @@ public class Wire implements ValidDevice {
         path.moveTo(pts.get(0).x, pts.get(0).y);
 
         if (pts.size() == 2) {
-            path.lineTo(pts.get(1).x, pts.get(1).y); 
+            path.lineTo(pts.get(1).x, pts.get(1).y);
         } else {
             for (int i = 1; i < pts.size() - 1; i++) {
                 Point prev = pts.get(i - 1);
                 Point curr = pts.get(i);
                 Point next = pts.get(i + 1);
 
-                
-                
+
                 double cx = curr.x;
                 double cy = curr.y;
                 double nx = (curr.x + next.x) / 2.0;
                 double ny = (curr.y + next.y) / 2.0;
                 path.quadTo(cx, cy, nx, ny);
             }
-            
+
             Point secondLast = pts.get(pts.size() - 2);
             Point last = pts.get(pts.size() - 1);
             path.lineTo(last.x, last.y);
@@ -167,7 +166,7 @@ public class Wire implements ValidDevice {
             return false;
         }
 
-        
+
         boolean basicValid = source.getType() == PortType.Output &&
                 destination.getType() == PortType.Input &&
                 destination.getHopConnected() != source.getHopConnected() &&
@@ -183,29 +182,52 @@ public class Wire implements ValidDevice {
         return this.valid;
     }
 
-    
-    public Port getSource() { return source; }
+
+    public Port getSource() {
+        return source;
+    }
+
     public void setSource(Port source) {
         this.source = source;
         updatePathPoints();
         updateLength();
     }
 
-    public Port getDestination() { return destination; }
+    public Port getDestination() {
+        return destination;
+    }
+
     public void setDestination(Port destination) {
         this.destination = destination;
         updatePathPoints();
         updateLength();
     }
 
-    public double getLength() { return length; }
-    public void setLength(double length) { this.length = length; }
+    public double getLength() {
+        return length;
+    }
 
-    public long getCreationTime() { return creationTime; }
+    public void setLength(double length) {
+        this.length = length;
+    }
 
-    public List<WireCurve> getCurves() { return new ArrayList<>(curves); }
-    public List<Point> getPathPoints() { return new ArrayList<>(pathPoints); }
+    public long getCreationTime() {
+        return creationTime;
+    }
 
-    public int getCurveCount() { return curves.size(); }
-    public boolean canAddCurve() { return curves.size() < MAX_CURVES; }
+    public List<WireCurve> getCurves() {
+        return new ArrayList<>(curves);
+    }
+
+    public List<Point> getPathPoints() {
+        return new ArrayList<>(pathPoints);
+    }
+
+    public int getCurveCount() {
+        return curves.size();
+    }
+
+    public boolean canAddCurve() {
+        return curves.size() < MAX_CURVES;
+    }
 }

@@ -1,6 +1,6 @@
 package com.example.network_game;
 
-public enum PortType{
+public enum PortType {
     Input,
     Output,
 }

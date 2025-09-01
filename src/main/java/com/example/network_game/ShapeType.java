@@ -1,6 +1,6 @@
 package com.example.network_game;
 
-public enum ShapeType{
+public enum ShapeType {
     Triangle,
     Square,
 }

@@ -1,6 +1,6 @@
 package com.example.network_game;
 
-public enum PocketState{
+public enum PocketState {
     InSource,
     InProgress,
     Lost,

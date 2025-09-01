@@ -3,15 +3,15 @@ package com.example.network_game;
 public enum PacketType {
     MESSENGER(1, 1),
     CONFIDENTIAL(1, 1),
-    TROJAN( 1, 1),
+    TROJAN(1, 1),
     PROTECTED(2, 5),
 
-    
+
     TEXT_INCOMPATIBLE(2, 2),
     VIDEO_ACCELERATING(3, 3),
-    AUDIO_DECELERATING( 1, 1),
+    AUDIO_DECELERATING(1, 1),
 
-    
+
     LARGE_SMALL(4, 3),
     LARGE_MEDIUM(6, 4),
     LARGE_BIG(8, 8),
@@ -25,8 +25,13 @@ public enum PacketType {
         this.coinReward = coinReward;
     }
 
-    public int getSize() { return size; }
-    public int getCoinReward() { return coinReward; }
+    public int getSize() {
+        return size;
+    }
+
+    public int getCoinReward() {
+        return coinReward;
+    }
 
     public boolean isLargePacket() {
         return this == LARGE_SMALL || this == LARGE_MEDIUM || this == LARGE_BIG || this == LARGE_HUGE;

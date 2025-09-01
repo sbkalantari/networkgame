@@ -4,10 +4,10 @@ import javax.swing.*;
 import java.awt.*;
 
 public class MainMenu extends JPanel {
-    private JButton startButton;
-    private JButton stagesButton;
-    private JButton settingsButton;
-    private JButton exitButton;
+    private final JButton startButton;
+    private final JButton stagesButton;
+    private final JButton settingsButton;
+    private final JButton exitButton;
 
     public MainMenu(CardLayout cardLayout, JPanel cardPanel, GameModel model, GameView gameView, GameController gameController) {
         setPreferredSize(new Dimension(800, 600));
@@ -30,7 +30,7 @@ public class MainMenu extends JPanel {
             gameView.setGameModel(model);
             gameController.setGameModel(model);
             cardLayout.show(cardPanel, "Game");
-            System.out.println("Game started"); 
+            System.out.println("Game started");
         });
         add(startButton);
 

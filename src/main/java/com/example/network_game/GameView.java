@@ -2,18 +2,20 @@ package com.example.network_game;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.geom.*;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Path2D;
+import java.awt.geom.Rectangle2D;
 
 public class GameView extends JPanel {
+    private static boolean stageCompletePlayed = false;
     private GameModel model;
-    private CardLayout cardLayout;
-    private JPanel cardPanel;
+    private final CardLayout cardLayout;
+    private final JPanel cardPanel;
     private JButton returnToMenuButton;
     private JButton nextStageButton;
     private JButton storeButton;
     private JButton playButton;
     private Point mousePos;
-    private static boolean stageCompletePlayed = false;
     private Port hoveredPort;
 
     public GameView(GameModel model, CardLayout cardLayout, JPanel cardPanel) {
@@ -127,7 +129,6 @@ public class GameView extends JPanel {
         g2d.fillRect(0, 0, getWidth(), getHeight());
 
 
-
         for (int i = 0; i < model.getSystems().size(); i++) {
             Hop system = model.getSystems().get(i);
             int x = system.getX();
@@ -143,21 +144,21 @@ public class GameView extends JPanel {
                 g2d.fill(new Ellipse2D.Double(x - 10, y - 10, width + 20, height + 20));
             }
 
-            
+
             g2d.setColor(system.getSystemColor());
             g2d.fillRoundRect(x, y, width, height, 10, 10);
             g2d.setColor(new Color(0, 255, 255));
             g2d.setStroke(new BasicStroke(1));
             g2d.drawRoundRect(x, y, width, height, 10, 10);
 
-            
+
             g2d.setColor(system.IsValid() && system.isActive() ?
                     new Color(0, 200, 0) : new Color(255, 0, 0));
             g2d.fillOval(x + width - 15, y + 5, 10, 10);
             g2d.setColor(Color.WHITE);
             g2d.drawOval(x + width - 15, y + 5, 10, 10);
 
-            
+
             g2d.setColor(Color.WHITE);
             g2d.setFont(new Font("Arial", Font.BOLD, 10));
             String typeLabel = system.getSystemType().name().substring(0,
@@ -219,7 +220,6 @@ public class GameView extends JPanel {
                 g2d.fillOval(dst.x - 5, dst.y - 5, 10, 10);
             }
         }
-
 
 
         for (Pocket pocket : model.getPockets()) {

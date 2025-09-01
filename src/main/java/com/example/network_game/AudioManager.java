@@ -5,19 +5,19 @@ import java.io.IOException;
 import java.net.URL;
 
 public class AudioManager {
-    private static float masterVolume = 0.0001f;
-    private static Clip backgroundClip;
     private static final String BACKGROUND_PATH = "/sound/background.wav";
     private static final String CONNECT_PATH = "/sound/connect.wav";
     private static final String STAGE_COMPLETE_PATH = "/sound/stage_complete.wav";
     private static final String DAMAGE_PATH = "/sound/damage.wav";
     private static final String CUT_PATH = "/sound/cutting.wav";
+    private static float masterVolume = 0.0001f;
+    private static Clip backgroundClip;
 
     public static void playBackgroundMusic() {
         try {
-            
+
             stopAllSounds();
-            
+
             URL url = AudioManager.class.getResource(BACKGROUND_PATH);
             if (url != null) {
                 AudioInputStream audioIn = AudioSystem.getAudioInputStream(url);
@@ -25,7 +25,7 @@ public class AudioManager {
                 backgroundClip.open(audioIn);
                 setClipVolume(backgroundClip, masterVolume);
                 backgroundClip.loop(Clip.LOOP_CONTINUOUSLY);
-                System.out.println("Background music started"); 
+                System.out.println("Background music started");
             } else {
                 System.err.println("Background audio file not found: " + BACKGROUND_PATH);
             }
@@ -40,7 +40,7 @@ public class AudioManager {
         if (backgroundClip != null) {
             setClipVolume(backgroundClip, masterVolume);
         }
-        System.out.println("Volume set to: " + masterVolume); 
+        System.out.println("Volume set to: " + masterVolume);
     }
 
     public static void playConnectSound() {
@@ -68,7 +68,7 @@ public class AudioManager {
                 clip.open(audioIn);
                 setClipVolume(clip, masterVolume);
                 clip.start();
-                System.out.println("Playing sound: " + path); 
+                System.out.println("Playing sound: " + path);
             } else {
                 System.err.println("Audio file not found: " + path);
             }
@@ -97,7 +97,7 @@ public class AudioManager {
             }
             backgroundClip.close();
             backgroundClip = null;
-            System.out.println("Background music stopped"); 
+            System.out.println("Background music stopped");
         }
     }
 }

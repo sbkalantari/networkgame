@@ -9,12 +9,12 @@ public class NetworkGame extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
 
-        
+
         CardLayout cardLayout = new CardLayout() {
             @Override
             public void show(Container parent, String name) {
                 super.show(parent, name);
-                
+
                 if ("Game".equals(name) || "Settings".equals(name)) {
                     AudioManager.playBackgroundMusic();
                     System.out.println("Showing " + name + ", background music started");
@@ -27,7 +27,7 @@ public class NetworkGame extends JFrame {
         JPanel cardPanel = new JPanel(cardLayout);
         cardPanel.setPreferredSize(new Dimension(800, 600));
 
-        
+
         GameModel initialModel = new GameModel();
         GameView view = new GameView(initialModel, cardLayout, cardPanel);
         GameController controller = new GameController(initialModel, view, cardLayout, cardPanel);
@@ -38,14 +38,14 @@ public class NetworkGame extends JFrame {
         SettingsPanel settingsPanel = new SettingsPanel(cardLayout, cardPanel);
         SettingsController settingsController = new SettingsController(settingsPanel, cardLayout, cardPanel);
 
-        
+
         cardPanel.add(new MainMenu(cardLayout, cardPanel, initialModel, view, controller), "MainMenu");
         cardPanel.add(view, "Game");
         cardPanel.add(stagesPanel, "Stages");
         cardPanel.add(settingsPanel, "Settings");
         cardPanel.add(storePanel, "Store");
 
-        
+
         add(cardPanel);
         pack();
         setLocationRelativeTo(null);

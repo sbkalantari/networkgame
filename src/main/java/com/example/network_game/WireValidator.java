@@ -11,7 +11,7 @@ public class WireValidator {
             Point p1 = wirePoints.get(i);
             Point p2 = wirePoints.get(i + 1);
             for (Hop system : systems) {
-                
+
                 if (system == sourceSystem || system == destinationSystem) continue;
                 Rectangle systemBounds = new Rectangle(system.getX(), system.getY(), system.getWidth(), system.getHeight());
                 if (new Line2D.Double(p1.x, p1.y, p2.x, p2.y).intersects(systemBounds)) {
