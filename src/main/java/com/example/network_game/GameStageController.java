@@ -79,6 +79,7 @@ public class GameStageController {
                 if (saveManager.loadGame()) {
                     Timer freezeTimer = new Timer(3000, e -> {
                         gameController.resumeGame();
+                        currentModel.setIsPlaying(true);
                         ((Timer) e.getSource()).stop();
                     });
                     freezeTimer.setRepeats(false);
