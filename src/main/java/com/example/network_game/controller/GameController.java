@@ -1,4 +1,8 @@
-package com.example.network_game;
+package com.example.network_game.controller;
+
+import com.example.network_game.model.*;
+import com.example.network_game.view.GameStagesPanel;
+import com.example.network_game.view.GameView;
 
 import javax.swing.*;
 import java.awt.*;

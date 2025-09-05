@@ -1,4 +1,4 @@
-package com.example.network_game;
+package com.example.network_game.model;
 
 public enum PacketType {
     MESSENGER(1, 1),

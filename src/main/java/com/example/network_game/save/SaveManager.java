@@ -1,4 +1,7 @@
-package com.example.network_game;
+package com.example.network_game.save;
+
+import com.example.network_game.controller.GameController;
+import com.example.network_game.model.*;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -338,7 +341,6 @@ public class SaveManager {
     private void applySaveData(GameSaveData data) {
 
         gameController.setGameModel(model);
-
 
         model.setCurrentTime(data.currentTime);
         model.setTotalWireLength(data.totalWireLength);

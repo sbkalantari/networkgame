@@ -1,4 +1,6 @@
-package com.example.network_game;
+package com.example.network_game.model;
+
+import com.example.network_game.controller.AudioManager;
 
 import javax.swing.*;
 import java.awt.*;

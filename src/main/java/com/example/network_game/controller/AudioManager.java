@@ -1,4 +1,4 @@
-package com.example.network_game;
+package com.example.network_game.controller;
 
 import javax.sound.sampled.*;
 import java.io.IOException;

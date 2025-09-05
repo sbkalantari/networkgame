@@ -1,4 +1,10 @@
-package com.example.network_game;
+package com.example.network_game.view;
+
+import com.example.network_game.controller.AudioManager;
+import com.example.network_game.model.PocketState;
+import com.example.network_game.model.PortType;
+import com.example.network_game.model.ShapeType;
+import com.example.network_game.model.*;
 
 import javax.swing.*;
 import java.awt.*;

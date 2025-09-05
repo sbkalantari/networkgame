@@ -1,4 +1,6 @@
-package com.example.network_game;
+package com.example.network_game.save;
+
+import com.example.network_game.model.*;
 
 import java.io.Serializable;
 import java.util.List;
