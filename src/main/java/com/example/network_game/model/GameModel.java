@@ -403,7 +403,7 @@ public class GameModel implements ValidDevice {
         Hop hop = pocket.getCurrentHop();
 
 
-        Pocket processedPacket = hop.processPacket(pocket, systems);
+        pocket = hop.processPacket(pocket, systems);
 
 
         if (pocket.isRouteToIncompatible()) {

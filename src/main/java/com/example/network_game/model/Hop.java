@@ -82,6 +82,7 @@ public class Hop implements ValidDevice {
 
 
         if (packet.getPacketType() == PacketType.PROTECTED) {
+            packet.returnToOriginType();
             return packet;
         }
 
@@ -104,6 +105,7 @@ public class Hop implements ValidDevice {
     private Pocket processSabotageSystem(Pocket packet) {
 
         if (packet.getPacketType() == PacketType.PROTECTED) {
+            packet.returnToOriginType();
             return packet;
         }
 

@@ -26,6 +26,7 @@ public class Pocket {
     private final double creationTime;
     private double accelerationFactor = 1.0;
     private boolean hasCollidedOnCurrentWire = false;
+    private PacketType originType;
 
     public Pocket() {
         this.progress = 0;
@@ -36,6 +37,8 @@ public class Pocket {
         this.shapeOffset = new Point(0, 0);
         this.health = 2;
         this.creationTime = System.currentTimeMillis() / 1000.0;
+        this.packetType = PacketType.MESSENGER;
+        this.originType = PacketType.MESSENGER;
     }
 
     public void setShape(ShapeType shape) {
@@ -197,9 +200,16 @@ public class Pocket {
     }
 
     public void setPacketType(PacketType packetType) {
+        if (packetType == PacketType.PROTECTED){
+            this.originType = this.packetType;
+        }
         this.packetType = packetType;
         this.coinReward = packetType.getCoinReward();
         this.size = packetType.getSize();
+    }
+
+    public void returnToOriginType(){
+        this.packetType = this.originType;
     }
 
     public int getNoiseLevel() {

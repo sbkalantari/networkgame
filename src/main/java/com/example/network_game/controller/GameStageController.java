@@ -142,7 +142,7 @@ public class GameStageController {
                 SystemType.VPN
         };
 
-        return new GameModel(systemPositions, types, 75.0, 3000.0);
+        return new GameModel(systemPositions, types, 75.0, 3500.0);
     }
 
     private GameModel createStage3() {
