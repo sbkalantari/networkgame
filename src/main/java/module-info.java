@@ -15,4 +15,6 @@ module com.example.network_game {
     opens com.example.network_game.controller to javafx.fxml;
     exports com.example.network_game.save;
     opens com.example.network_game.save to javafx.fxml;
+    exports com.example.network_game.network;
+    opens com.example.network_game.network to javafx.fxml;
 }
