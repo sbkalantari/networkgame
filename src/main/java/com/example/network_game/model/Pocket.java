@@ -27,6 +27,7 @@ public class Pocket {
     private double accelerationFactor = 1.0;
     private boolean hasCollidedOnCurrentWire = false;
     private PacketType originType;
+    private MultiplayerGameModel.PlayerType playerType;
 
     public Pocket() {
         this.progress = 0;
@@ -359,4 +360,29 @@ public class Pocket {
     public void setLastHit(Pocket lastHit) {
         this.lastHit = lastHit;
     }
+
+    public void setPlayerType(MultiplayerGameModel.PlayerType playerType) {
+        this.playerType = playerType;
+    }
+
+    public MultiplayerGameModel.PlayerType getPlayerType() {
+        return playerType;
+    }
+
+    public void setAccelerationFactor(double factor) {
+        this.accelerationFactor = factor;
+    }
+
+    public Color getPlayerColor() {
+        if (playerType != null) {
+            return playerType.getColor();
+        }
+        return Color.WHITE;
+    }
+
+    public boolean canMoveOnPlayerNetwork(MultiplayerGameModel.PlayerType networkOwner) {
+        if (playerType == null) return true;
+        return playerType == networkOwner;
+    }
+
 }
